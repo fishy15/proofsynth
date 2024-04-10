@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "proof-synthesizer"
+version = "0.1.0"
+description = "Propositional logic proof synthesizer"
+authors = ["Aaryan Prakash <38575855+fishy15@users.noreply.github.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+lark = "^1.1.9"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.3.0"
+mypy = "^1.9.0"
+pytest = "^8.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

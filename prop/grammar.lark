@@ -1,0 +1,15 @@
+var : CNAME
+
+?expr : "(" expr_inner ")"
+?expr_inner : var
+            | neg
+            | imply
+
+// two constructors
+neg : "!" expr
+imply : expr "->" expr
+
+%import common.CNAME
+
+%import common.WS
+%ignore WS
