@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "proof-synthesizer"
+name = "proofsynth"
 version = "0.1.0"
 description = "Propositional logic proof synthesizer"
 authors = ["Aaryan Prakash <38575855+fishy15@users.noreply.github.com>"]
