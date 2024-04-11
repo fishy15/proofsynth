@@ -2,6 +2,7 @@ import pytest
 
 from prop.lang import *
 from prop.prop_parser import parse_prop
+from prop.canonicalize import canonicalize
 
 
 @pytest.mark.parametrize(
@@ -30,3 +31,18 @@ def test_prop_parser(expr: str, expected: Expr) -> None:
 )
 def test_prop_str(expr: Expr, expected: str) -> None:
     assert str(expr) == expected
+
+@pytest.mark.parametrize(
+    "expr,expected",
+    [
+        ("(P)", "(P)"),
+        ("(!(!(P)))", "(P)"),
+        ("((P) -> (Q))", "((P) -> (Q))"),
+        ("((P) || (Q))", "((!(P)) -> (Q))"),
+        ("((P) && (Q))", "(!((P) -> (!(Q))))"),
+        ("((!(P)) || (Q))", "((P) -> (Q))"),
+        ("(!((P) && (!(Q))))", "((P) -> (Q))"),
+    ],
+)
+def test_canonicalize(expr: str, expected: Expr) -> None:
+    assert str(canonicalize(parse_prop(expr))) == expected
