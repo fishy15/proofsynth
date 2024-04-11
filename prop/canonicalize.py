@@ -1,9 +1,11 @@
 from prop.lang import *
 
-'''
+"""
 Rewrites the expression to only use -> and !.
 Also deletes double negations.
-'''
+"""
+
+
 def canonicalize(expr: Expr) -> Expr:
     match expr:
         case ENeg(body):

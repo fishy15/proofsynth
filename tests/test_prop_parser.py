@@ -32,6 +32,7 @@ def test_prop_parser(expr: str, expected: Expr) -> None:
 def test_prop_str(expr: Expr, expected: str) -> None:
     assert str(expr) == expected
 
+
 @pytest.mark.parametrize(
     "expr,expected",
     [
