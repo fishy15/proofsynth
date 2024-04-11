@@ -23,6 +23,14 @@ class PropTransformer(Transformer):
         left, right = tree
         return EImplies(left, right)
 
+    def eand(self, tree) -> Expr:
+        left, right = tree
+        return EAnd(left, right)
+
+    def eor(self, tree) -> Expr:
+        left, right = tree
+        return EOr(left, right)
+
 
 def parse_prop(text: str) -> Expr:
     with open(Path(__file__).parent.absolute() / "grammar.lark", "r") as f:

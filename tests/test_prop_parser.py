@@ -8,6 +8,10 @@ from prop.prop_parser import parse_prop
     "expr,expected",
     [
         ("((P) -> (Q))", EImplies(EVar("P"), EVar("Q"))),
+        ("((P) && (Q))", EAnd(EVar("P"), EVar("Q"))),
+        ("((P) || (Q))", EOr(EVar("P"), EVar("Q"))),
+        ("(!(P))", ENeg(EVar("P"))),
+        ("(!(!(P)))", ENeg(ENeg(EVar("P")))),
     ],
 )
 def test_prop_parser(expr: str, expected: Expr) -> None:

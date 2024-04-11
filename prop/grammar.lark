@@ -4,10 +4,14 @@ var : CNAME
 ?expr_inner : var
             | neg
             | imply
+            | eand
+            | eor
 
 // two constructors
 neg : "!" expr
 imply : expr "->" expr
+eand : expr "&&" expr
+eor : expr "||" expr
 
 %import common.CNAME
 

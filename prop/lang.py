@@ -23,3 +23,15 @@ class ENeg(Expr):
 class EImplies(Expr):
     left: Expr
     right: Expr
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class EAnd(Expr):
+    left: Expr
+    right: Expr
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class EOr(Expr):
+    left: Expr
+    right: Expr
