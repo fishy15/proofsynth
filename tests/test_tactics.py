@@ -9,6 +9,14 @@ from prop.prop_parser import parse_prop
     [
         (THypothesis.new("P"), "P"),
         (TModusPonens(THypothesis.new("P -> Q"), THypothesis.new("P")), "Q"),
+        (TModusTollens(THypothesis.new("P -> Q"), THypothesis.new("!Q")), "!P"),
+        (
+            THypotheticalSyllogism(
+                THypothesis.new("P -> Q"), THypothesis.new("Q -> R")
+            ),
+            "P -> R",
+        ),
+        (TDisjunctiveSyllogism(THypothesis.new("P || Q"), THypothesis.new("!P")), "Q"),
     ],
 )
 def test_prop_parser(tactics_tree: Tactic, expected: str) -> None:
