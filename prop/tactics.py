@@ -221,3 +221,69 @@ class TAssocAndRight(Tactic):
                 return EAnd(EAnd(p, q), r)
             case _:
                 raise EvalException("[TAssocAndRight] Term is not a conjunction")
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TDistribAndSingle(Tactic):
+    conj: Tactic
+
+    def eval(self) -> Expr:
+        conj_expr = self.conj.eval()
+
+        match conj_expr:
+            case EAnd(p, EOr(q, r)):
+                return EOr(EAnd(p, q), EAnd(p, r))
+            case _:
+                raise EvalException("[TDistribAndSingle] Term is not a conjunction")
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TDistribAndDouble(Tactic):
+    conj: Tactic
+
+    def eval(self) -> Expr:
+        conj_expr = self.conj.eval()
+
+        match conj_expr:
+            case EAnd(EOr(p1, q), EOr(p2, r)):
+                if p1 == p2:
+                    return EOr(p1, EAnd(q, r))
+                else:
+                    raise EvalException(
+                        "[TDistribAndDouble] First terms are not the same"
+                    )
+            case _:
+                raise EvalException("[TDistribAndSingle] Term is not a conjunction")
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TDistribOrSingle(Tactic):
+    disj: Tactic
+
+    def eval(self) -> Expr:
+        disj_expr = self.disj.eval()
+
+        match disj_expr:
+            case EOr(p, EAnd(q, r)):
+                return EAnd(EOr(p, q), EOr(p, r))
+            case _:
+                raise EvalException("[TDistribOrSingle] Term is not a disjunction")
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TDistribOrDouble(Tactic):
+    disj: Tactic
+
+    def eval(self) -> Expr:
+        disj_expr = self.disj.eval()
+
+        match disj_expr:
+            case EOr(EAnd(p1, q), EAnd(p2, r)):
+                if p1 == p2:
+                    return EAnd(p1, EOr(q, r))
+                else:
+                    raise EvalException(
+                        "[TDistribOrDouble] First terms are not the same"
+                    )
+            case _:
+                raise EvalException("[TDistribOrSingle] Term is not a disjunction")

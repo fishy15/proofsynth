@@ -24,6 +24,10 @@ from prop.prop_parser import parse_prop
         (TAssocAndLeft(THypothesis.new("(P && Q) && R")), "P && (Q && R)"),
         (TAssocOrRight(THypothesis.new("P || (Q || R)")), "(P || Q) || R"),
         (TAssocAndRight(THypothesis.new("P && (Q && R)")), "(P && Q) && R"),
+        (TDistribOrSingle(THypothesis.new("P || (Q && R)")), "(P || Q) && (P || R)"),
+        (TDistribAndSingle(THypothesis.new("P && (Q || R)")), "(P && Q) || (P && R)"),
+        (TDistribOrDouble(THypothesis.new("(P && Q) || (P && R)")), "P && (Q || R)"),
+        (TDistribAndDouble(THypothesis.new("(P || Q) && (P || R)")), "P || (Q && R)"),
     ],
 )
 def test_prop_parser(tactics_tree: Tactic, expected: str) -> None:
