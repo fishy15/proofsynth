@@ -1,17 +1,20 @@
 var : CNAME
 
 ?expr : "(" expr_inner ")"
-?expr_inner : var
-            | neg
-            | imply
+      | var
+      | neg
+
+// these must be surrounded by ()
+?expr_inner : imply
             | eand
             | eor
+            | expr // extra parens are okay
 
-// two constructors
 neg : "!" expr
-imply : expr "->" expr
-eand : expr "&&" expr
-eor : expr "||" expr
+
+imply : [expr ("->" expr)+] 
+eand : [expr ("&&" expr)+] 
+eor : [expr ("||" expr)+] 
 
 %import common.CNAME
 

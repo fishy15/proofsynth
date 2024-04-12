@@ -8,11 +8,15 @@ from prop.canonicalize import canonicalize
 @pytest.mark.parametrize(
     "expr,expected",
     [
-        ("((P) -> (Q))", EImplies(EVar("P"), EVar("Q"))),
-        ("((P) && (Q))", EAnd(EVar("P"), EVar("Q"))),
-        ("((P) || (Q))", EOr(EVar("P"), EVar("Q"))),
-        ("(!(P))", ENeg(EVar("P"))),
-        ("(!(!(P)))", ENeg(ENeg(EVar("P")))),
+        ("P", EVar("P")),
+        ("P -> Q", EImplies(EVar("P"), EVar("Q"))),
+        ("P -> Q -> R", EImplies(EVar("P"), EImplies(EVar("Q"), EVar("R")))),
+        ("P && Q", EAnd(EVar("P"), EVar("Q"))),
+        ("P && Q && R", EAnd(EVar("P"), EAnd(EVar("Q"), EVar("R")))),
+        ("P || Q", EOr(EVar("P"), EVar("Q"))),
+        ("P || Q || R", EOr(EVar("P"), EOr(EVar("Q"), EVar("R")))),
+        ("!P", ENeg(EVar("P"))),
+        ("!!P", ENeg(ENeg(EVar("P")))),
     ],
 )
 def test_prop_parser(expr: str, expected: Expr) -> None:
@@ -36,14 +40,14 @@ def test_prop_str(expr: Expr, expected: str) -> None:
 @pytest.mark.parametrize(
     "expr,expected",
     [
-        ("(P)", "(P)"),
-        ("(!(!(P)))", "(P)"),
-        ("((P) -> (Q))", "((P) -> (Q))"),
-        ("((P) || (Q))", "((!(P)) -> (Q))"),
-        ("((P) && (Q))", "(!((P) -> (!(Q))))"),
-        ("((!(P)) || (Q))", "((P) -> (Q))"),
-        ("(!((P) && (!(Q))))", "((P) -> (Q))"),
+        ("P", "P"),
+        ("!!P", "P"),
+        ("P -> Q", "P -> Q"),
+        ("P || Q", "!P -> Q"),
+        ("P && Q", "!(P -> !Q)"),
+        ("!P || Q", "P -> Q"),
+        ("!(P && !Q)", "P -> Q"),
     ],
 )
-def test_canonicalize(expr: str, expected: Expr) -> None:
-    assert str(canonicalize(parse_prop(expr))) == expected
+def test_canonicalize(expr: str, expected: str) -> None:
+    assert canonicalize(parse_prop(expr)) == parse_prop(expected)

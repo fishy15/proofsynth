@@ -1,5 +1,5 @@
 from pathlib import Path
-from lark import Transformer, Lark
+from lark import Transformer, Lark, Tree
 
 from prop.lang import *
 
@@ -7,6 +7,13 @@ from prop.lang import *
 def construct_parser() -> Lark:
     with open(Path(__file__).parent.absolute() / "grammar.lark", "r") as f:
         return Lark(f, start="expr")
+
+
+def construct_right_associative(cls, tree) -> Expr:
+    right: Expr = tree[-1]
+    for left in reversed(tree[:-1]):
+        right = cls(left, right)
+    return right
 
 
 class PropTransformer(Transformer):
@@ -20,21 +27,19 @@ class PropTransformer(Transformer):
         return ENeg(tree[0])
 
     def imply(self, tree) -> Expr:
-        left, right = tree
-        return EImplies(left, right)
+        return construct_right_associative(EImplies, tree)
 
     def eand(self, tree) -> Expr:
-        left, right = tree
-        return EAnd(left, right)
+        return construct_right_associative(EAnd, tree)
 
     def eor(self, tree) -> Expr:
-        left, right = tree
-        return EOr(left, right)
+        return construct_right_associative(EOr, tree)
 
 
 def parse_prop(text: str) -> Expr:
     with open(Path(__file__).parent.absolute() / "grammar.lark", "r") as f:
         parser = Lark(f, start="expr")
 
+    text = "(" + text + ")"
     tree = parser.parse(text)
     return PropTransformer().transform(tree)
