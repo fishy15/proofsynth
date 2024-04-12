@@ -287,3 +287,41 @@ class TDistribOrDouble(Tactic):
                     )
             case _:
                 raise EvalException("[TDistribOrSingle] Term is not a disjunction")
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TDoubleNegationAdd(Tactic):
+    term: Tactic
+
+    def eval(self) -> Expr:
+        return ENeg(ENeg(self.term.eval()))
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TDoubleNegationRemove(Tactic):
+    term: Tactic
+
+    def eval(self) -> Expr:
+        term_expr = self.term.eval()
+
+        match term_expr:
+            case ENeg(ENeg(body)):
+                return body
+            case _:
+                raise EvalException(
+                    "[TDoubleNegationRemove] Expression does not have a double negation"
+                )
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TTransposition(Tactic):
+    term: Tactic
+
+    def eval(self) -> Expr:
+        term_expr = self.term.eval()
+
+        match term_expr:
+            case EImplies(p, q):
+                return EImplies(ENeg(q), ENeg(p))
+            case _:
+                raise EvalException("[TTransposition] Expression is not an implication")

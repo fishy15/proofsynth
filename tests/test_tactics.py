@@ -28,6 +28,9 @@ from prop.prop_parser import parse_prop
         (TDistribAndSingle(THypothesis.new("P && (Q || R)")), "(P && Q) || (P && R)"),
         (TDistribOrDouble(THypothesis.new("(P && Q) || (P && R)")), "P && (Q || R)"),
         (TDistribAndDouble(THypothesis.new("(P || Q) && (P || R)")), "P || (Q && R)"),
+        (TDoubleNegationAdd(THypothesis.new("P")), "!!P"),
+        (TDoubleNegationRemove(THypothesis.new("!!P")), "P"),
+        (TTransposition(THypothesis.new("P -> Q")), "!Q -> !P"),
     ],
 )
 def test_prop_parser(tactics_tree: Tactic, expected: str) -> None:
