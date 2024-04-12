@@ -17,6 +17,13 @@ from prop.prop_parser import parse_prop
             "P -> R",
         ),
         (TDisjunctiveSyllogism(THypothesis.new("P || Q"), THypothesis.new("!P")), "Q"),
+        (TSimplification(THypothesis.new("P && Q")), "P"),
+        (TCommuteOr(THypothesis.new("P || Q")), "Q || P"),
+        (TCommuteAnd(THypothesis.new("P && Q")), "Q && P"),
+        (TAssocOrLeft(THypothesis.new("(P || Q) || R")), "P || (Q || R)"),
+        (TAssocAndLeft(THypothesis.new("(P && Q) && R")), "P && (Q && R)"),
+        (TAssocOrRight(THypothesis.new("P || (Q || R)")), "(P || Q) || R"),
+        (TAssocAndRight(THypothesis.new("P && (Q && R)")), "(P && Q) && R"),
     ],
 )
 def test_prop_parser(tactics_tree: Tactic, expected: str) -> None:

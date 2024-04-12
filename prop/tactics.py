@@ -113,3 +113,111 @@ class TDisjunctiveSyllogism(Tactic):
                 raise EvalException(
                     "[TDisjunctiveSyllogism] First term is not a disjunction"
                 )
+
+
+# skipping Constructive Dilemma
+# skipping Destructive Dilemma
+# skipping Bidirectional Dilemma
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TSimplification(Tactic):
+    conj: Tactic
+
+    def eval(self) -> Expr:
+        conj_expr = self.conj.eval()
+
+        match conj_expr:
+            case EAnd(p, _):
+                return p
+            case _:
+                raise EvalException("[TSimplifcation] Term is not a conjunction")
+
+
+# skipping Addition
+# skipping Composition
+# skipping De Morgan
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TCommuteOr(Tactic):
+    disj: Tactic
+
+    def eval(self) -> Expr:
+        disj_expr = self.disj.eval()
+
+        match disj_expr:
+            case EOr(p, q):
+                return EOr(q, p)
+            case _:
+                raise EvalException("[TCommuteOr] Term is not a disjunction")
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TCommuteAnd(Tactic):
+    conj: Tactic
+
+    def eval(self) -> Expr:
+        conj_expr = self.conj.eval()
+
+        match conj_expr:
+            case EAnd(p, q):
+                return EAnd(q, p)
+            case _:
+                raise EvalException("[TCommuteAnd] Term is not a conjunction")
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TAssocOrLeft(Tactic):
+    disj: Tactic
+
+    def eval(self) -> Expr:
+        disj_expr = self.disj.eval()
+
+        match disj_expr:
+            case EOr(EOr(p, q), r):
+                return EOr(p, EOr(q, r))
+            case _:
+                raise EvalException("[TAssocOrLeft] Term is not a disjunction")
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TAssocAndLeft(Tactic):
+    conj: Tactic
+
+    def eval(self) -> Expr:
+        conj_expr = self.conj.eval()
+
+        match conj_expr:
+            case EAnd(EAnd(p, q), r):
+                return EAnd(p, EAnd(q, r))
+            case _:
+                raise EvalException("[TAssocAndLeft] Term is not a conjunction")
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TAssocOrRight(Tactic):
+    disj: Tactic
+
+    def eval(self) -> Expr:
+        disj_expr = self.disj.eval()
+
+        match disj_expr:
+            case EOr(p, EOr(q, r)):
+                return EOr(EOr(p, q), r)
+            case _:
+                raise EvalException("[TAssocOrRight] Term is not a disjunction")
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TAssocAndRight(Tactic):
+    conj: Tactic
+
+    def eval(self) -> Expr:
+        conj_expr = self.conj.eval()
+
+        match conj_expr:
+            case EAnd(p, EAnd(q, r)):
+                return EAnd(EAnd(p, q), r)
+            case _:
+                raise EvalException("[TAssocAndRight] Term is not a conjunction")
