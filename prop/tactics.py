@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Self
+from typing import Callable, List, Self
 
 from prop.lang import *
 from prop.prop_parser import parse_prop
@@ -325,3 +325,28 @@ class TTransposition(Tactic):
                 return EImplies(ENeg(q), ENeg(p))
             case _:
                 raise EvalException("[TTransposition] Expression is not an implication")
+
+
+bottom_up_tactics_double: List[Callable[[Tactic, Tactic], Tactic]] = [
+    TModusPonens,
+    TModusTollens,
+    THypotheticalSyllogism,
+    TDisjunctiveSyllogism,
+]
+
+bottom_up_tactics_single: List[Callable[[Tactic], Tactic]] = [
+    TSimplification,
+    TCommuteOr,
+    TCommuteAnd,
+    TAssocOrLeft,
+    TAssocAndLeft,
+    TAssocOrRight,
+    TAssocAndRight,
+    TDistribAndSingle,
+    TDistribAndDouble,
+    TDistribOrSingle,
+    TDistribOrDouble,
+    TDoubleNegationAdd,
+    TDoubleNegationRemove,
+    TTransposition,
+]
