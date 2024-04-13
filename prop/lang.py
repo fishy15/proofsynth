@@ -1,9 +1,12 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import TypeAlias
 
 
-class Expr:
-    pass
+class Expr(ABC):
+    @abstractmethod
+    def depth(self) -> int:
+        pass
 
 
 Id: TypeAlias = str
@@ -16,6 +19,9 @@ class EVar(Expr):
     def __str__(self) -> str:
         return f"({self.name})"
 
+    def depth(self) -> int:
+        return 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class ENeg(Expr):
@@ -23,6 +29,9 @@ class ENeg(Expr):
 
     def __str__(self) -> str:
         return f"(!{self.body})"
+
+    def depth(self) -> int:
+        return self.body.depth() + 1
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -33,6 +42,9 @@ class EImplies(Expr):
     def __str__(self) -> str:
         return f"({self.left} -> {self.right})"
 
+    def depth(self) -> int:
+        return max(self.left.depth(), self.right.depth()) + 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class EAnd(Expr):
@@ -42,6 +54,9 @@ class EAnd(Expr):
     def __str__(self) -> str:
         return f"({self.left} && {self.right})"
 
+    def depth(self) -> int:
+        return max(self.left.depth(), self.right.depth()) + 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class EOr(Expr):
@@ -50,3 +65,6 @@ class EOr(Expr):
 
     def __str__(self) -> str:
         return f"({self.left} || {self.right})"
+
+    def depth(self) -> int:
+        return max(self.left.depth(), self.right.depth()) + 1
