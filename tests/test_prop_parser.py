@@ -51,3 +51,18 @@ def test_prop_str(expr: Expr, expected: str) -> None:
 )
 def test_canonicalize(expr: str, expected: str) -> None:
     assert canonicalize(parse_prop(expr)) == parse_prop(expected)
+
+
+@pytest.mark.parametrize(
+    "expr,expected",
+    [
+        ("P", 1),
+        ("!!P", 3),
+        ("P -> Q", 2),
+        ("P || Q", 2),
+        ("P && Q", 2),
+        ("P -> Q -> R", 3),
+    ],
+)
+def test_depth(expr: str, expected: int) -> None:
+    assert parse_prop(expr).depth() == expected
