@@ -14,3 +14,7 @@ def split_or(state: ProofState) -> List[ProofState]:
             return [ProofState(state.hypotheses, p), ProofState(state.hypotheses, q)]
         case _:
             return [state]
+
+
+def apply_all_end(state: ProofState) -> List[ProofState]:
+    return split_or(state)

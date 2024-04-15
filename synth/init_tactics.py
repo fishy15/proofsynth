@@ -27,3 +27,7 @@ def intro_ands(state: ProofState) -> ProofState:
                     break
         else:
             return state
+
+
+def apply_all_init(state: ProofState):
+    return intros(intro_ands(state))
