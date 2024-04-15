@@ -16,24 +16,30 @@ ITERATION_LIMIT = 10000
 
 def construct_proof(goal: Expr) -> Optional[Tactic]:
     state = ProofState([], goal)
-    return solve_proofstate(state)
+    return solve_proofstate(state, ITERATION_LIMIT)
 
 
-def solve_proofstate(state: ProofState) -> Optional[Tactic]:
+def solve_proofstate(state: ProofState, iterations_allowed: int) -> Optional[Tactic]:
     state_after_inits = apply_all_init(state)
     state_after_both = apply_all_end(state_after_inits)
 
     if len(state_after_both) == 1 and state == state_after_both[0]:
         # we didn't make any progress
-        return find_tactics(state, Naive())
+        return find_tactics(state, Naive(), iterations_allowed)
     else:
-        for proof in map(solve_proofstate, state_after_both):
+        iterations_per_goal = iterations_allowed // len(state_after_both)
+        proofs_per_goal = (
+            solve_proofstate(s, iterations_per_goal) for s in state_after_both
+        )
+        for proof in proofs_per_goal:
             if proof is not None:
                 return proof
         return None
 
 
-def find_tactics(state: ProofState, heuristic: Heuristic) -> Optional[Tactic]:
+def find_tactics(
+    state: ProofState, heuristic: Heuristic, iterations_allowed: int
+) -> Optional[Tactic]:
     # print("hypothesis:", " ".join(map(str, state.hypotheses)))
     # print("goal:", state.goal)
 
@@ -55,7 +61,7 @@ def find_tactics(state: ProofState, heuristic: Heuristic) -> Optional[Tactic]:
 
     iterations = 0
 
-    while state.goal not in current_proofs and iterations <= ITERATION_LIMIT:
+    while state.goal not in current_proofs and iterations <= iterations_allowed:
         k = min(4, len(current_proofs))
         sample = random.sample(list(current_proofs.items()), k)
         sample_exprs = [s[0] for s in sample]
