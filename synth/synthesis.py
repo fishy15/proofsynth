@@ -3,6 +3,7 @@ import random
 from itertools import product
 from typing import Optional
 
+from prop.canonicalize import canonicalize, remove_double_negation
 from prop.lang import Expr
 from prop.tactics import Tactic, THypothesis, EvalException
 from synth.proofstate import ProofState
@@ -14,18 +15,44 @@ from heuristic.naive import Naive
 ITERATION_LIMIT = 10000
 
 
-def construct_proof(goal: Expr) -> Optional[Tactic]:
+def construct_proof(goal: Expr, **kwargs: bool) -> Optional[Tactic]:
+    if "canonicalize" in kwargs:
+        should_canonicalize = kwargs["canonicalize"]
+    else:
+        should_canonicalize = False
+
+    if "remove_double_neg" in kwargs:
+        remove_double_neg = kwargs["remove_double_neg"]
+    else:
+        remove_double_neg = False
+
+    if should_canonicalize:
+        canonical_goal = canonicalize(goal)
+        # print('canonicalization:', goal, "TO", canonical_goal)
+        goal = canonical_goal
+    elif remove_double_neg:
+        goal_remove_negs = remove_double_negation(goal)
+        # print('remove double negs:', goal, "TO", goal_remove_negs)
+        goal = goal_remove_negs
+
     state = ProofState([], goal)
-    return solve_proofstate(state, ITERATION_LIMIT)
+    return solve_proofstate(state, remove_double_neg=remove_double_neg)
 
 
-def solve_proofstate(state: ProofState, iterations_allowed: int) -> Optional[Tactic]:
+def solve_proofstate(
+    state: ProofState, iterations_allowed: int = ITERATION_LIMIT, **kwargs: bool
+) -> Optional[Tactic]:
+    if "remove_double_neg" in kwargs:
+        remove_double_neg = kwargs["remove_double_neg"]
+    else:
+        remove_double_neg = False
+
     state_after_inits = apply_all_init(state)
     state_after_both = apply_all_end(state_after_inits)
 
     if len(state_after_both) == 1 and state == state_after_both[0]:
         # we didn't make any progress
-        return find_tactics(state, Naive(), iterations_allowed)
+        return find_tactics(state, Naive(), iterations_allowed, remove_double_neg)
     else:
         iterations_per_goal = iterations_allowed // len(state_after_both)
         proofs_per_goal = (
@@ -38,7 +65,10 @@ def solve_proofstate(state: ProofState, iterations_allowed: int) -> Optional[Tac
 
 
 def find_tactics(
-    state: ProofState, heuristic: Heuristic, iterations_allowed: int
+    state: ProofState,
+    heuristic: Heuristic,
+    iterations_allowed: int,
+    remove_double_neg: bool,
 ) -> Optional[Tactic]:
     # print("hypothesis:", " ".join(map(str, state.hypotheses)))
     # print("goal:", state.goal)
@@ -50,6 +80,9 @@ def find_tactics(
     def insert_if_valid(proof: Tactic):
         try:
             expr = proof.eval()
+            if remove_double_neg:
+                expr = remove_double_negation(expr)
+
             if (
                 expr not in current_proofs
                 and expr.depth() < 2 * state.goal.depth() + 10
