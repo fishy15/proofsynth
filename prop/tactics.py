@@ -327,6 +327,34 @@ class TTransposition(Tactic):
                 raise EvalException("[TTransposition] Expression is not an implication")
 
 
+@dataclass(frozen=True, slots=True, eq=True)
+class TImpliesToOr(Tactic):
+    term: Tactic
+
+    def eval(self) -> Expr:
+        term_expr = self.term.eval()
+
+        match term_expr:
+            case EImplies(p, q):
+                return EOr(ENeg(p), q)
+            case _:
+                raise EvalException("[TImpliesToOr] Expression is not an implication")
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TOrToImplies(Tactic):
+    term: Tactic
+
+    def eval(self) -> Expr:
+        term_expr = self.term.eval()
+
+        match term_expr:
+            case EOr(p, q):
+                return EImplies(ENeg(p), q)
+            case _:
+                raise EvalException("[TImpliesToOr] Expression is not an implication")
+
+
 SingleTactic = Callable[[Tactic], Tactic]
 DoubleTactic = Callable[[Tactic, Tactic], Tactic]
 
@@ -345,6 +373,8 @@ bottom_up_tactics_single: List[SingleTactic] = [
     TDoubleNegationAdd,
     TDoubleNegationRemove,
     TTransposition,
+    TImpliesToOr,
+    TOrToImplies,
 ]
 
 bottom_up_tactics_double: List[DoubleTactic] = [
