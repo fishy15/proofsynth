@@ -13,6 +13,7 @@ from synth.synthesis import construct_proof
         "P -> (P -> Q) -> Q",
         "P -> (P -> Q) -> (Q || R)",
         "((!Q -> !P) && P) -> ((!!P -> !!Q) || (Q -> R))",
+        "(P -> Q -> R -> S -> T) -> P -> Q -> R -> S -> T"
     ],
 )
 def test_prop_parser(goal: str) -> None:

@@ -11,7 +11,7 @@ from synth.init_tactics import apply_all_init
 from synth.end_tactics import apply_all_end
 from synth.heuristic import Heuristic, Naive
 
-ITERATION_LIMIT = 100
+ITERATION_LIMIT = 10000
 
 
 def construct_proof(goal: Expr) -> Optional[Tactic]:
