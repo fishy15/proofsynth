@@ -5,11 +5,11 @@ from typing import Optional
 
 from prop.lang import Expr
 from prop.tactics import Tactic, THypothesis, EvalException
-
 from synth.proofstate import ProofState
 from synth.init_tactics import apply_all_init
 from synth.end_tactics import apply_all_end
-from synth.heuristic import Heuristic, Naive
+from heuristic.heuristic import Heuristic
+from heuristic.naive import Naive
 
 ITERATION_LIMIT = 10000
 
