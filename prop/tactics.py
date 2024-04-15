@@ -327,14 +327,10 @@ class TTransposition(Tactic):
                 raise EvalException("[TTransposition] Expression is not an implication")
 
 
-bottom_up_tactics_double: List[Callable[[Tactic, Tactic], Tactic]] = [
-    TModusPonens,
-    TModusTollens,
-    THypotheticalSyllogism,
-    TDisjunctiveSyllogism,
-]
+SingleTactic = Callable[[Tactic], Tactic]
+DoubleTactic = Callable[[Tactic, Tactic], Tactic]
 
-bottom_up_tactics_single: List[Callable[[Tactic], Tactic]] = [
+bottom_up_tactics_single: List[SingleTactic] = [
     TSimplification,
     TCommuteOr,
     TCommuteAnd,
@@ -349,4 +345,11 @@ bottom_up_tactics_single: List[Callable[[Tactic], Tactic]] = [
     TDoubleNegationAdd,
     TDoubleNegationRemove,
     TTransposition,
+]
+
+bottom_up_tactics_double: List[DoubleTactic] = [
+    TModusPonens,
+    TModusTollens,
+    THypotheticalSyllogism,
+    TDisjunctiveSyllogism,
 ]
