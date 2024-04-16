@@ -14,6 +14,10 @@ class Tactic(ABC):
     def eval(self) -> Expr:
         pass
 
+    @abstractmethod
+    def depth(self) -> int:
+        pass
+
 
 class EvalException(Exception):
     pass
@@ -25,6 +29,9 @@ class THypothesis(Tactic):
 
     def eval(self) -> Expr:
         return self.term
+
+    def depth(self) -> int:
+        return 1
 
     @classmethod
     def new(cls, expr: str) -> Self:
@@ -50,6 +57,9 @@ class TModusPonens(Tactic):
             case _:
                 raise EvalException("[TModusPonens] Left side is not an implication")
 
+    def depth(self) -> int:
+        return max(self.imply.depth(), self.result.depth()) + 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TModusTollens(Tactic):
@@ -69,6 +79,9 @@ class TModusTollens(Tactic):
                 )
             case _:
                 raise EvalException("[TModusPonens] Left side is not an implication")
+
+    def depth(self) -> int:
+        return max(self.imply.depth(), self.result.depth()) + 1
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -92,6 +105,9 @@ class THypotheticalSyllogism(Tactic):
                     "[THypotheticalSyllogism] One of the terms is not an implication"
                 )
 
+    def depth(self) -> int:
+        return max(self.imply1.depth(), self.imply2.depth()) + 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TDisjunctiveSyllogism(Tactic):
@@ -114,6 +130,9 @@ class TDisjunctiveSyllogism(Tactic):
                     "[TDisjunctiveSyllogism] First term is not a disjunction"
                 )
 
+    def depth(self) -> int:
+        return max(self.disjunc.depth(), self.not_p.depth()) + 1
+
 
 # skipping Constructive Dilemma
 # skipping Destructive Dilemma
@@ -132,6 +151,9 @@ class TSimplification(Tactic):
                 return p
             case _:
                 raise EvalException("[TSimplifcation] Term is not a conjunction")
+
+    def depth(self) -> int:
+        return self.conj.depth() + 1
 
 
 # skipping Addition
@@ -152,6 +174,9 @@ class TCommuteOr(Tactic):
             case _:
                 raise EvalException("[TCommuteOr] Term is not a disjunction")
 
+    def depth(self) -> int:
+        return self.disj.depth() + 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TCommuteAnd(Tactic):
@@ -165,6 +190,9 @@ class TCommuteAnd(Tactic):
                 return EAnd(q, p)
             case _:
                 raise EvalException("[TCommuteAnd] Term is not a conjunction")
+
+    def depth(self) -> int:
+        return self.conj.depth() + 1
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -180,6 +208,9 @@ class TAssocOrLeft(Tactic):
             case _:
                 raise EvalException("[TAssocOrLeft] Term is not a disjunction")
 
+    def depth(self) -> int:
+        return self.disj.depth() + 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TAssocAndLeft(Tactic):
@@ -193,6 +224,9 @@ class TAssocAndLeft(Tactic):
                 return EAnd(p, EAnd(q, r))
             case _:
                 raise EvalException("[TAssocAndLeft] Term is not a conjunction")
+
+    def depth(self) -> int:
+        return self.conj.depth() + 1
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -208,6 +242,9 @@ class TAssocOrRight(Tactic):
             case _:
                 raise EvalException("[TAssocOrRight] Term is not a disjunction")
 
+    def depth(self) -> int:
+        return self.disj.depth() + 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TAssocAndRight(Tactic):
@@ -222,6 +259,9 @@ class TAssocAndRight(Tactic):
             case _:
                 raise EvalException("[TAssocAndRight] Term is not a conjunction")
 
+    def depth(self) -> int:
+        return self.conj.depth() + 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TDistribAndSingle(Tactic):
@@ -235,6 +275,9 @@ class TDistribAndSingle(Tactic):
                 return EOr(EAnd(p, q), EAnd(p, r))
             case _:
                 raise EvalException("[TDistribAndSingle] Term is not a conjunction")
+
+    def depth(self) -> int:
+        return self.conj.depth() + 1
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -255,6 +298,9 @@ class TDistribAndDouble(Tactic):
             case _:
                 raise EvalException("[TDistribAndSingle] Term is not a conjunction")
 
+    def depth(self) -> int:
+        return self.conj.depth() + 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TDistribOrSingle(Tactic):
@@ -268,6 +314,9 @@ class TDistribOrSingle(Tactic):
                 return EAnd(EOr(p, q), EOr(p, r))
             case _:
                 raise EvalException("[TDistribOrSingle] Term is not a disjunction")
+
+    def depth(self) -> int:
+        return self.disj.depth() + 1
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -288,6 +337,9 @@ class TDistribOrDouble(Tactic):
             case _:
                 raise EvalException("[TDistribOrSingle] Term is not a disjunction")
 
+    def depth(self) -> int:
+        return self.disj.depth() + 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TDoubleNegationAdd(Tactic):
@@ -295,6 +347,9 @@ class TDoubleNegationAdd(Tactic):
 
     def eval(self) -> Expr:
         return ENeg(ENeg(self.term.eval()))
+
+    def depth(self) -> int:
+        return self.term.depth() + 1
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -312,6 +367,9 @@ class TDoubleNegationRemove(Tactic):
                     "[TDoubleNegationRemove] Expression does not have a double negation"
                 )
 
+    def depth(self) -> int:
+        return self.term.depth() + 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TTransposition(Tactic):
@@ -325,6 +383,9 @@ class TTransposition(Tactic):
                 return EImplies(ENeg(q), ENeg(p))
             case _:
                 raise EvalException("[TTransposition] Expression is not an implication")
+
+    def depth(self) -> int:
+        return self.term.depth() + 1
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -340,6 +401,9 @@ class TImpliesToOr(Tactic):
             case _:
                 raise EvalException("[TImpliesToOr] Expression is not an implication")
 
+    def depth(self) -> int:
+        return self.term.depth() + 1
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TOrToImplies(Tactic):
@@ -353,6 +417,9 @@ class TOrToImplies(Tactic):
                 return EImplies(ENeg(p), q)
             case _:
                 raise EvalException("[TImpliesToOr] Expression is not an implication")
+
+    def depth(self) -> int:
+        return self.term.depth() + 1
 
 
 SingleTactic = Callable[[Tactic], Tactic]
