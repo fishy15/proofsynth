@@ -564,3 +564,7 @@ bottom_up_tactics_double: List[DoubleTactic] = [
     THypotheticalSyllogism,
     TDisjunctiveSyllogism,
 ]
+
+all_tactics: list[SingleTactic | DoubleTactic] = (
+    bottom_up_tactics_single + bottom_up_tactics_double
+)

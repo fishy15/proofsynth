@@ -3,11 +3,15 @@ import random
 from prop.lang import *
 from prop.tactics import *
 
-MAX_DEPTH = 8
-LIMIT = 100000
+MAX_DEPTH = 5
+SAMPLE_SIZE = 3
+
+EXPR_LIMIT = 10_000
+PROOF_LIMIT = 100_000
+SAMPLE_LIMIT = 10_000_000
 
 
-def generate_init_exprs(limit: int = LIMIT) -> list[Expr]:
+def generate_init_exprs(limit: int = EXPR_LIMIT) -> list[Expr]:
     current_exprs: list[Expr] = list(map(EVar, "PQRST"))
     current_exprs_set = set(current_exprs)
 
@@ -28,7 +32,9 @@ def generate_init_exprs(limit: int = LIMIT) -> list[Expr]:
     return current_exprs
 
 
-def generate_random_programs(exprs: list[Expr], limit: int = LIMIT) -> list[Tactic]:
+def generate_random_programs(
+    exprs: list[Expr], limit: int = PROOF_LIMIT
+) -> list[Tactic]:
     current_proofs: list[Tactic] = list(map(THypothesis, exprs))
     current_proofs_set = set(current_proofs)
 
@@ -54,3 +60,36 @@ def generate_random_programs(exprs: list[Expr], limit: int = LIMIT) -> list[Tact
             pass
 
     return current_proofs
+
+
+def generate_training_examples(proofs: list[Tactic], limit: int = SAMPLE_LIMIT) -> None:
+    extraction_and_goals = [(p.extract_examples(), p.eval()) for p in proofs]
+
+    for _ in range(limit):
+        while True:
+            proof_extract, goal = random.choice(extraction_and_goals)
+            if proof_extract:
+                break
+
+        hypotheses = list(proof_extract.keys())
+        samples = [random.choice(hypotheses) for _ in range(SAMPLE_SIZE)]
+
+        tactics_used: set[SingleTactic | DoubleTactic] = set()
+        for s in samples:
+            s1, s2 = proof_extract[s]
+            tactics_used.update(s1)
+            tactics_used.update(s2)
+
+        random_tactic = random.choice(list(tactics_used))
+
+        to_convert = samples + [goal]
+        input_str = ",".join([str(e)[:64] for e in to_convert])
+        output_str = str(all_tactics.index(random_tactic))
+        result = f"{input_str},{output_str}"
+
+        # compact the output so each character is a token
+        result = result.replace(" && ", "&")
+        result = result.replace(" || ", "|")
+        result = result.replace(" -> ", ">")
+
+        print(result)

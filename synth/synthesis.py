@@ -13,6 +13,7 @@ from heuristic.heuristic import Heuristic
 from heuristic.naive import Naive
 
 ITERATION_LIMIT = 10000
+SAMPLE_SIZE = 3
 
 
 def construct_proof(goal: Expr, **kwargs: bool) -> Optional[Tactic]:
@@ -95,8 +96,9 @@ def find_tactics(
     iterations = 0
 
     while state.goal not in current_proofs and iterations <= iterations_allowed:
-        k = min(4, len(current_proofs))
-        sample = random.sample(list(current_proofs.items()), k)
+        sample = random.choice(
+            [list(current_proofs.items()) for _ in range(SAMPLE_SIZE)]
+        )
         sample_exprs = [s[0] for s in sample]
         sample_tactics = [s[1] for s in sample]
 
