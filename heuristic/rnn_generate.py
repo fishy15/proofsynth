@@ -83,7 +83,7 @@ def generate_training_examples(proofs: list[Tactic], limit: int = SAMPLE_LIMIT) 
         random_tactic = random.choice(list(tactics_used))
 
         to_convert = samples + [goal]
-        input_str = ",".join([str(e)[:64] for e in to_convert])
+        input_str = ",".join(map(str, to_convert))
         output_str = str(all_tactics.index(random_tactic))
         result = f"{input_str},{output_str}"
 
