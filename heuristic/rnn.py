@@ -87,7 +87,7 @@ def train(examples: Tuple[torch.Tensor, torch.Tensor], checkpoint_dir: str) -> M
 
     random.seed(1001)
 
-    num_epochs = 10
+    num_epochs = 20
     batch_size = BATCH_SIZE
 
     for t in range(0, num_epochs):
