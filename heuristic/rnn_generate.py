@@ -1,4 +1,5 @@
 import random
+import sys
 
 from prop.lang import *
 from prop.tactics import *
@@ -62,7 +63,9 @@ def generate_random_programs(
     return current_proofs
 
 
-def generate_training_examples(proofs: list[Tactic], limit: int = SAMPLE_LIMIT) -> None:
+def generate_training_examples(
+    proofs: list[Tactic], limit: int = SAMPLE_LIMIT, file=sys.stdout
+) -> None:
     extraction_and_goals = [(p.extract_examples(), p.eval()) for p in proofs]
 
     for _ in range(limit):
@@ -92,4 +95,4 @@ def generate_training_examples(proofs: list[Tactic], limit: int = SAMPLE_LIMIT) 
         result = result.replace(" || ", "|")
         result = result.replace(" -> ", ">")
 
-        print(result)
+        print(result, file=file)

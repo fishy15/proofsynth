@@ -2,7 +2,6 @@ import random
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 
 from typing import Tuple
@@ -20,7 +19,7 @@ BATCH_SIZE = 2
 TERM_SIZE = 64
 
 
-class MyRnn(nn.Module):
+class MyRNN(nn.Module):
     emb: nn.Embedding
     rnn: nn.RNN
     final: nn.Linear
@@ -65,8 +64,8 @@ def load_training_examples(
     return examples
 
 
-def train(examples: list[Tuple[torch.Tensor, torch.Tensor]]) -> nn.RNN:
-    model = MyRnn(TERM_SIZE * 4, 32, 32, 3)
+def train(examples: list[Tuple[torch.Tensor, torch.Tensor]]) -> MyRNN:
+    model = MyRNN(TERM_SIZE * 4, 32, 32, 3)
     model.zero_grad()
     model.train()
     optimizer = optim.Adam(model.parameters(), lr=1e-2)
