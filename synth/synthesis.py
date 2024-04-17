@@ -75,8 +75,10 @@ def find_tactics(
     # print("goal:", state.goal)
 
     current_proofs: dict[Expr, Tactic] = {}
+    current_hypotheses: list[Expr] = []
     for h in state.hypotheses:
         current_proofs[h] = THypothesis(h)
+        current_hypotheses.append(h)
 
     def insert_if_valid(proof: Tactic):
         try:
@@ -96,11 +98,8 @@ def find_tactics(
     iterations = 0
 
     while state.goal not in current_proofs and iterations <= iterations_allowed:
-        sample = random.choice(
-            [list(current_proofs.items()) for _ in range(SAMPLE_SIZE)]
-        )
-        sample_exprs = [s[0] for s in sample]
-        sample_tactics = [s[1] for s in sample]
+        sample_exprs = [random.choice(current_hypotheses) for _ in range(SAMPLE_SIZE)]
+        sample_tactics = [current_proofs[h] for h in sample_exprs]
 
         if random.random() < 0.5:
             # double tactic
