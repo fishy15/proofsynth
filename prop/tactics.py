@@ -1,12 +1,30 @@
 from abc import ABC, abstractmethod
-from typing import Callable, List, Self
+from typing import Callable, List, Self, Tuple, TypeVar
 
 from prop.lang import *
+from prop.lang import Expr
 from prop.prop_parser import parse_prop
 
 """
 Implements tactics from https://en.wikipedia.org/wiki/Propositional_calculus#List_of_classically_valid_argument_forms.
 """
+
+SingleTactic = Callable[["Tactic"], "Tactic"]
+DoubleTactic = Callable[["Tactic", "Tactic"], "Tactic"]
+ProofSummary = Tuple[set[SingleTactic], set[DoubleTactic]]
+
+
+def combine_summaries(
+    dict1: dict[Expr, ProofSummary], dict2: dict[Expr, ProofSummary]
+) -> dict[Expr, ProofSummary]:
+    result = dict1.copy()
+    for k, (lst_v1, lst_v2) in dict2.items():
+        if k in result:
+            result[k][0].update(lst_v1)
+            result[k][1].update(lst_v2)
+        else:
+            result[k] = (lst_v1, lst_v2)
+    return result
 
 
 class Tactic(ABC):
@@ -17,6 +35,42 @@ class Tactic(ABC):
     @abstractmethod
     def depth(self) -> int:
         pass
+
+    @abstractmethod
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        pass
+
+    def _single_extract_examples(self, child: "Tactic") -> dict[Expr, ProofSummary]:
+        cls = type(self)
+        expr = child.eval()
+        result = child.extract_examples()
+
+        if expr in result:
+            result[expr][0].add(cls)
+        else:
+            result[expr] = (set([cls]), set())
+
+        return result
+
+    def _double_extract_examples(
+        self, child1: "Tactic", child2: "Tactic"
+    ) -> dict[Expr, ProofSummary]:
+        cls = type(self)
+        expr1 = child1.eval()
+        expr2 = child2.eval()
+        result = combine_summaries(child1.extract_examples(), child2.extract_examples())
+
+        if expr1 in result:
+            result[expr1][1].add(cls)
+        else:
+            result[expr1] = (set(), set([cls]))
+
+        if expr2 in result:
+            result[expr2][1].add(cls)
+        else:
+            result[expr2] = (set(), set([cls]))
+
+        return result
 
 
 class EvalException(Exception):
@@ -32,6 +86,9 @@ class THypothesis(Tactic):
 
     def depth(self) -> int:
         return 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return {}
 
     @classmethod
     def new(cls, expr: str) -> Self:
@@ -60,6 +117,9 @@ class TModusPonens(Tactic):
     def depth(self) -> int:
         return max(self.imply.depth(), self.result.depth()) + 1
 
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._double_extract_examples(self.imply, self.result)
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TModusTollens(Tactic):
@@ -82,6 +142,9 @@ class TModusTollens(Tactic):
 
     def depth(self) -> int:
         return max(self.imply.depth(), self.result.depth()) + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._double_extract_examples(self.imply, self.result)
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -108,6 +171,9 @@ class THypotheticalSyllogism(Tactic):
     def depth(self) -> int:
         return max(self.imply1.depth(), self.imply2.depth()) + 1
 
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._double_extract_examples(self.imply1, self.imply2)
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TDisjunctiveSyllogism(Tactic):
@@ -133,6 +199,9 @@ class TDisjunctiveSyllogism(Tactic):
     def depth(self) -> int:
         return max(self.disjunc.depth(), self.not_p.depth()) + 1
 
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._double_extract_examples(self.disjunc, self.not_p)
+
 
 # skipping Constructive Dilemma
 # skipping Destructive Dilemma
@@ -154,6 +223,9 @@ class TSimplification(Tactic):
 
     def depth(self) -> int:
         return self.conj.depth() + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.conj)
 
 
 # skipping Addition
@@ -177,6 +249,9 @@ class TCommuteOr(Tactic):
     def depth(self) -> int:
         return self.disj.depth() + 1
 
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.disj)
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TCommuteAnd(Tactic):
@@ -193,6 +268,9 @@ class TCommuteAnd(Tactic):
 
     def depth(self) -> int:
         return self.conj.depth() + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.conj)
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -211,6 +289,9 @@ class TAssocOrLeft(Tactic):
     def depth(self) -> int:
         return self.disj.depth() + 1
 
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.disj)
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TAssocAndLeft(Tactic):
@@ -227,6 +308,9 @@ class TAssocAndLeft(Tactic):
 
     def depth(self) -> int:
         return self.conj.depth() + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.conj)
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -245,6 +329,9 @@ class TAssocOrRight(Tactic):
     def depth(self) -> int:
         return self.disj.depth() + 1
 
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.disj)
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TAssocAndRight(Tactic):
@@ -262,6 +349,9 @@ class TAssocAndRight(Tactic):
     def depth(self) -> int:
         return self.conj.depth() + 1
 
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.conj)
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TDistribAndSingle(Tactic):
@@ -278,6 +368,9 @@ class TDistribAndSingle(Tactic):
 
     def depth(self) -> int:
         return self.conj.depth() + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.conj)
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -301,6 +394,9 @@ class TDistribAndDouble(Tactic):
     def depth(self) -> int:
         return self.conj.depth() + 1
 
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.conj)
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TDistribOrSingle(Tactic):
@@ -317,6 +413,9 @@ class TDistribOrSingle(Tactic):
 
     def depth(self) -> int:
         return self.disj.depth() + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.disj)
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -340,6 +439,9 @@ class TDistribOrDouble(Tactic):
     def depth(self) -> int:
         return self.disj.depth() + 1
 
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.disj)
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TDoubleNegationAdd(Tactic):
@@ -350,6 +452,9 @@ class TDoubleNegationAdd(Tactic):
 
     def depth(self) -> int:
         return self.term.depth() + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.term)
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -370,6 +475,9 @@ class TDoubleNegationRemove(Tactic):
     def depth(self) -> int:
         return self.term.depth() + 1
 
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.term)
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TTransposition(Tactic):
@@ -386,6 +494,9 @@ class TTransposition(Tactic):
 
     def depth(self) -> int:
         return self.term.depth() + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.term)
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -404,6 +515,9 @@ class TImpliesToOr(Tactic):
     def depth(self) -> int:
         return self.term.depth() + 1
 
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.term)
+
 
 @dataclass(frozen=True, slots=True, eq=True)
 class TOrToImplies(Tactic):
@@ -421,9 +535,9 @@ class TOrToImplies(Tactic):
     def depth(self) -> int:
         return self.term.depth() + 1
 
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.term)
 
-SingleTactic = Callable[[Tactic], Tactic]
-DoubleTactic = Callable[[Tactic, Tactic], Tactic]
 
 bottom_up_tactics_single: List[SingleTactic] = [
     TSimplification,

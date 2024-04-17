@@ -35,3 +35,34 @@ from prop.prop_parser import parse_prop
 )
 def test_prop_parser(tactics_tree: Tactic, expected: str) -> None:
     assert tactics_tree.eval() == parse_prop(expected)
+
+
+@pytest.mark.parametrize(
+    "tactics_tree,expected_repr",
+    [
+        (
+            TModusPonens(THypothesis.new("P -> Q"), THypothesis.new("P")),
+            {"P": ([], [TModusPonens]), "P -> Q": ([], [TModusPonens])},
+        ),
+        (
+            TModusPonens(
+                THypothesis.new("P -> Q"),
+                TDoubleNegationRemove(TDoubleNegationAdd(THypothesis.new("P"))),
+            ),
+            {
+                "P": ([TDoubleNegationAdd], [TModusPonens]),
+                "!!P": ([TDoubleNegationRemove], []),
+                "P -> Q": ([], [TModusPonens]),
+            },
+        ),
+    ],
+)
+def test_extraction(
+    tactics_tree: Tactic,
+    expected_repr: dict[str, Tuple[list[SingleTactic], list[DoubleTactic]]],
+) -> None:
+    expected: dict[Expr, ProofSummary] = {}
+    for k, (s1, s2) in expected_repr.items():
+        expected[parse_prop(k)] = (set(s1), set(s2))
+
+    assert tactics_tree.extract_examples() == expected
