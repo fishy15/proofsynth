@@ -13,10 +13,8 @@ from prop.tactics import (
 
 
 class Naive(Heuristic):
-    @staticmethod
-    def pick_tactic_single(hypotheses: List[Expr], goal: Expr) -> SingleTactic:
+    def pick_tactic_single(self, hypotheses: List[Expr], goal: Expr) -> SingleTactic:
         return random.choice(bottom_up_tactics_single)
 
-    @staticmethod
-    def pick_tactic_double(hypotheses: List[Expr], goal: Expr) -> DoubleTactic:
+    def pick_tactic_double(self, hypotheses: List[Expr], goal: Expr) -> DoubleTactic:
         return random.choice(bottom_up_tactics_double)

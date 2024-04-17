@@ -16,7 +16,7 @@ def generate():
 
 def process_examples():
     directory = input("which dir? ")
-    examples = load_training_examples(f"{directory}/training.txt", 64)
+    examples = load_training_examples(f"{directory}/training.txt")
     torch.save(examples, f"{directory}/training.pt")
 
 

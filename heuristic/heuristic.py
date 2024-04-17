@@ -11,12 +11,10 @@ from prop.tactics import (
 
 
 class Heuristic(ABC):
-    @staticmethod
     @abstractmethod
-    def pick_tactic_single(hypotheses: List[Expr], goal: Expr) -> SingleTactic:
+    def pick_tactic_single(self, hypotheses: List[Expr], goal: Expr) -> SingleTactic:
         pass
 
-    @staticmethod
     @abstractmethod
-    def pick_tactic_double(hypotheses: List[Expr], goal: Expr) -> DoubleTactic:
+    def pick_tactic_double(self, hypotheses: List[Expr], goal: Expr) -> DoubleTactic:
         pass

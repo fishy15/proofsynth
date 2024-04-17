@@ -63,6 +63,17 @@ def generate_random_programs(
     return current_proofs
 
 
+def create_input(samples: list[Expr], goal: Expr) -> str:
+    to_convert = samples + [goal]
+    result = ",".join(map(str, to_convert))
+
+    # compact the output so each character is a token
+    result = result.replace(" && ", "&")
+    result = result.replace(" || ", "|")
+    result = result.replace(" -> ", ">")
+    return result
+
+
 def generate_training_examples(
     proofs: list[Tactic], limit: int = SAMPLE_LIMIT, file=sys.stdout
 ) -> None:
@@ -85,14 +96,8 @@ def generate_training_examples(
 
         random_tactic = random.choice(list(tactics_used))
 
-        to_convert = samples + [goal]
-        input_str = ",".join(map(str, to_convert))
+        input_str = create_input(samples, goal)
         output_str = str(all_tactics.index(random_tactic))
         result = f"{input_str},{output_str}"
-
-        # compact the output so each character is a token
-        result = result.replace(" && ", "&")
-        result = result.replace(" || ", "|")
-        result = result.replace(" -> ", ">")
 
         print(result, file=file)

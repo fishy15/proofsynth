@@ -2,11 +2,14 @@ import random
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 
 from typing import Optional, Tuple
 
+from prop.lang import Expr
 from prop.tactics import all_tactics
+from heuristic.rnn_generate import create_input
 
 ALPHABET = "PQRST!&|>()_"
 BATCH_SIZE = 20
@@ -16,6 +19,16 @@ if torch.cuda.is_available():
     device = "cuda"
 else:
     device = "cpu"
+
+
+def convert(s: str) -> torch.Tensor:
+    if len(s) > TERM_SIZE:
+        s = s[:TERM_SIZE]
+    while len(s) < TERM_SIZE:
+        s += "_"
+
+    lst = [ALPHABET.index(c) for c in s]
+    return torch.Tensor(lst).long()
 
 
 class MyRNN(nn.Module):
@@ -35,19 +48,23 @@ class MyRNN(nn.Module):
             torch.flatten(after_rnn, 1)
         )  # don't want to flatten batch dimension
 
+    def evaluate(self, hypotheses: list[Expr], goal: Expr) -> torch.Tensor:
+        input_str = create_input(hypotheses, goal)
+        input_tensor = torch.stack(list(map(convert, input_str.split(","))))
+        output_tensor = self.forward(input_tensor.unsqueeze(0)).squeeze()
+        return output_tensor
 
-def load_training_examples(
-    file_name: str, max_term_len: int
-) -> Tuple[torch.Tensor, torch.Tensor]:
-    def convert(s: str) -> torch.Tensor:
-        if len(s) > max_term_len:
-            s = s[:max_term_len]
-        while len(s) < max_term_len:
-            s += "_"
 
-        lst = [ALPHABET.index(c) for c in s]
-        return torch.Tensor(lst).long()
+def load_model(checkpoint_file: Optional[str]) -> MyRNN:
+    model = MyRNN(TERM_SIZE * 4, 32, 32, 3)
+    if checkpoint_file is not None:
+        checkpoint = torch.load(checkpoint_file)
+        model.load_state_dict(checkpoint["model"])
+    model.eval()
+    return model
 
+
+def load_training_examples(file_name: str) -> Tuple[torch.Tensor, torch.Tensor]:
     example_inps = []
     example_outs = []
     with open(file_name, "r") as f:
