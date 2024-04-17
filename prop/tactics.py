@@ -230,7 +230,86 @@ class TSimplification(Tactic):
 
 # skipping Addition
 # skipping Composition
-# skipping De Morgan
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TDeMorganNotAnd(Tactic):
+    term: Tactic
+
+    def eval(self) -> Expr:
+        term_expr = self.term.eval()
+
+        match term_expr:
+            case ENeg(EAnd(p, q)):
+                return EOr(ENeg(p), ENeg(q))
+            case _:
+                raise EvalException("[TDeMorganNotAnd] Term is not in the right form")
+
+    def depth(self) -> int:
+        return self.term.depth() + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.term)
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TDeMorganNotOr(Tactic):
+    term: Tactic
+
+    def eval(self) -> Expr:
+        term_expr = self.term.eval()
+
+        match term_expr:
+            case ENeg(EOr(p, q)):
+                return EAnd(ENeg(p), ENeg(q))
+            case _:
+                raise EvalException("[TDeMorganNotOr] Term is not in the right form")
+
+    def depth(self) -> int:
+        return self.term.depth() + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.term)
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TDeMorganAndNot(Tactic):
+    term: Tactic
+
+    def eval(self) -> Expr:
+        term_expr = self.term.eval()
+
+        match term_expr:
+            case EAnd(ENeg(p), ENeg(q)):
+                return ENeg(EOr(p, q))
+            case _:
+                raise EvalException("[TDeMorganAndNot] Term is not in the right form")
+
+    def depth(self) -> int:
+        return self.term.depth() + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.term)
+
+
+@dataclass(frozen=True, slots=True, eq=True)
+class TDeMorganOrNot(Tactic):
+    term: Tactic
+
+    def eval(self) -> Expr:
+        term_expr = self.term.eval()
+
+        match term_expr:
+            case EOr(ENeg(p), ENeg(q)):
+                return ENeg(EAnd(p, q))
+            case _:
+                raise EvalException("[TDeMorganOrNot] Term is not in the right form")
+
+    def depth(self) -> int:
+        return self.term.depth() + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return self._single_extract_examples(self.term)
 
 
 @dataclass(frozen=True, slots=True, eq=True)
@@ -541,6 +620,10 @@ class TOrToImplies(Tactic):
 
 bottom_up_tactics_single: List[SingleTactic] = [
     TSimplification,
+    TDeMorganAndNot,
+    TDeMorganOrNot,
+    TDeMorganNotAnd,
+    TDeMorganNotOr,
     TCommuteOr,
     TCommuteAnd,
     TAssocOrLeft,
