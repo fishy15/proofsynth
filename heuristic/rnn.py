@@ -44,7 +44,7 @@ class MyRNN(nn.Module):
 
 def load_training_examples(
     file_name: str, max_term_len: int
-) -> list[Tuple[torch.Tensor, torch.Tensor]]:
+) -> Tuple[torch.Tensor, torch.Tensor]:
     def convert(s: str) -> torch.Tensor:
         if len(s) > max_term_len:
             s = s[:max_term_len]
@@ -54,7 +54,8 @@ def load_training_examples(
         lst = [ALPHABET.index(c) for c in s]
         return torch.Tensor(lst).long()
 
-    examples = []
+    example_inps = []
+    example_outs = []
     with open(file_name, "r") as f:
         for line in f:
             terms = line.strip().split(",")
@@ -64,9 +65,10 @@ def load_training_examples(
             input_tensor = torch.cat((t1, t2, t3, goal)).to(device)
             output_tensor = torch.Tensor([cls]).long().to(device)
 
-            examples.append((input_tensor, output_tensor))
+            example_inps.append(input_tensor)
+            example_outs.append(output_tensor)
 
-    return examples
+    return torch.stack(example_inps), torch.stack(example_outs)
 
 
 def save_checkpoint(epoch, iter, model, dir):
@@ -75,9 +77,8 @@ def save_checkpoint(epoch, iter, model, dir):
     torch.save(model.state_dict(), file_name)
 
 
-def train(
-    examples: list[Tuple[torch.Tensor, torch.Tensor]], checkpoint_dir: str
-) -> MyRNN:
+def train(examples: Tuple[torch.Tensor, torch.Tensor], checkpoint_dir: str) -> MyRNN:
+    example_inps, example_outs = examples
     model = MyRNN(TERM_SIZE * 4, 32, 32, 3)
     model.to(device)
     model.zero_grad()
@@ -98,8 +99,8 @@ def train(
 
         iteration_cnt = 0
         for exs in batch(ex_idxs, batch_size):
-            inp = torch.stack([examples[i][0] for i in exs])
-            target = torch.stack([examples[i][1] for i in exs]).squeeze()
+            inp = torch.stack([example_inps[i] for i in exs])
+            target = torch.stack([example_outs[i] for i in exs]).squeeze()
             output = model(inp)
 
             loss = loss_fcn(output, target)
