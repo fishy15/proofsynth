@@ -1,4 +1,4 @@
-from heuristic.rnn import *
+from heuristic.rnn_generate import *
 
 exprs = generate_init_exprs()
 proofs = generate_random_programs(exprs)
