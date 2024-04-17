@@ -6,22 +6,25 @@ from heuristic.rnn import *
 
 def generate():
     limit = int(input("how much? "))
+    directory = input("which dir? ")
 
     exprs = generate_init_exprs()
     proofs = generate_random_programs(exprs)
-    with open("training.txt", "w") as f:
+    with open(f"{directory}/training.txt", "w") as f:
         generate_training_examples(proofs, limit=limit, file=f)
 
 
 def process_examples():
-    examples = load_training_examples("training.txt", 64)
-    torch.save(examples, "training.pt")
+    directory = input("which dir? ")
+    examples = load_training_examples(f"{directory}/training.txt", 64)
+    torch.save(examples, f"{directory}/training.pt")
 
 
 def train_model():
-    examples = torch.load("training.pt")
-    model = train(examples)
-    torch.save(model, "model.pt")
+    save_dir = input("which dir? ")
+    examples = torch.load(f"{save_dir}/training.pt")
+    model = train(examples, save_dir)
+    torch.save(model, f"{save_dir}/model.pt")
 
 
 def main():

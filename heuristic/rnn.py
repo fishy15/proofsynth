@@ -64,7 +64,15 @@ def load_training_examples(
     return examples
 
 
-def train(examples: list[Tuple[torch.Tensor, torch.Tensor]]) -> MyRNN:
+def save_checkpoint(epoch, iter, model, dir):
+    file_name = f"{dir}/checkpoint_{epoch}_{iter}.pt"
+    print("saving checkpoint at", file_name)
+    torch.save(model, file_name)
+
+
+def train(
+    examples: list[Tuple[torch.Tensor, torch.Tensor]], checkpoint_dir: str
+) -> MyRNN:
     model = MyRNN(TERM_SIZE * 4, 32, 32, 3)
     model.zero_grad()
     model.train()
@@ -82,6 +90,7 @@ def train(examples: list[Tuple[torch.Tensor, torch.Tensor]]) -> MyRNN:
         random.shuffle(ex_idxs)
         loss_fcn = nn.CrossEntropyLoss()
 
+        iteration_cnt = 0
         for exs in batch(ex_idxs, batch_size):
             inp = torch.stack([examples[i][0] for i in exs])
             target = torch.stack([examples[i][1] for i in exs]).squeeze()
@@ -94,6 +103,10 @@ def train(examples: list[Tuple[torch.Tensor, torch.Tensor]]) -> MyRNN:
             optimizer.step()
 
             loss_this_epoch += loss.item()
+            iteration_cnt += 1
+
+            if iteration_cnt % 1000 == 0:
+                save_checkpoint(t, iteration_cnt, model, checkpoint_dir)
 
         print("Loss:", loss_this_epoch)
 
