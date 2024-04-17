@@ -91,6 +91,7 @@ def find_tactics(
                 and expr.depth() < 2 * state.goal.depth() + 10
             ):
                 current_proofs[expr] = proof
+                current_hypotheses.append(expr)
         except EvalException:
             # just means that it is invalid
             pass
