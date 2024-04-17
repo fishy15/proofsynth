@@ -93,7 +93,7 @@ def train(examples: Tuple[torch.Tensor, torch.Tensor], checkpoint_dir: str) -> M
     for t in range(0, num_epochs):
         print("Epoch", t)
         loss_this_epoch = 0.0
-        ex_idxs = [i for i in range(0, len(examples))]
+        ex_idxs = [i for i in range(0, len(example_inps))]
         random.shuffle(ex_idxs)
         loss_fcn = nn.CrossEntropyLoss()
 
