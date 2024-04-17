@@ -131,7 +131,7 @@ def train(
             loss_this_epoch += loss.item()
             iteration_cnt += 1
 
-            if iteration_cnt % 1 == 0:
+            if iteration_cnt % 10000 == 0:
                 save_checkpoint(t, iteration_cnt, model, optimizer, checkpoint_dir)
 
         print("Loss:", loss_this_epoch)
