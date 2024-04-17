@@ -22,8 +22,15 @@ def process_examples():
 
 def train_model():
     save_dir = input("which dir? ")
+    should_load = input("load checkpoint? (y/n) ")
+    if should_load.lower() == "y":
+        checkpoint_file = input("checkpoint name? ")
+        checkpoint_file = f"{save_dir}/{checkpoint_file}"
+    else:
+        checkpoint_file = None
+
     examples = torch.load(f"{save_dir}/training.pt")
-    model = train(examples, save_dir)
+    model = train(examples, save_dir, checkpoint_file)
     torch.save(model.state_dict(), f"{save_dir}/model.pt")
 
 

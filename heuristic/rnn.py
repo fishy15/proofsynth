@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from typing import Tuple
+from typing import Optional, Tuple
 
 from prop.tactics import (
     bottom_up_tactics_single,
@@ -15,7 +15,7 @@ from prop.tactics import (
 )
 
 ALPHABET = "PQRST!&|>()_"
-BATCH_SIZE = 2
+BATCH_SIZE = 20
 TERM_SIZE = 64
 
 if torch.cuda.is_available():
@@ -71,13 +71,24 @@ def load_training_examples(
     return torch.stack(example_inps), torch.stack(example_outs)
 
 
-def save_checkpoint(epoch, iter, model, dir):
+def save_checkpoint(epoch, iter, model, optimizer, dir):
     file_name = f"{dir}/checkpoint_{epoch}_{iter}.pt"
     print("saving checkpoint at", file_name)
-    torch.save(model.state_dict(), file_name)
+
+    checkpoint = {
+        "model": model.state_dict(),
+        "optim": optimizer.state_dict(),
+        "epoch": epoch,
+    }
+
+    torch.save(checkpoint, file_name)
 
 
-def train(examples: Tuple[torch.Tensor, torch.Tensor], checkpoint_dir: str) -> MyRNN:
+def train(
+    examples: Tuple[torch.Tensor, torch.Tensor],
+    checkpoint_dir: str,
+    load_from: Optional[str] = None,
+) -> MyRNN:
     example_inps, example_outs = examples
     model = MyRNN(TERM_SIZE * 4, 32, 32, 3)
     model.to(device)
@@ -87,10 +98,18 @@ def train(examples: Tuple[torch.Tensor, torch.Tensor], checkpoint_dir: str) -> M
 
     random.seed(1001)
 
+    if load_from is not None:
+        checkpoint = torch.load(load_from)
+        model.load_state_dict(checkpoint["model"])
+        optimizer.load_state_dict(checkpoint["optim"])
+        epoch_start = checkpoint["epoch"]
+    else:
+        epoch_start = 0
+
     num_epochs = 20
     batch_size = BATCH_SIZE
 
-    for t in range(0, num_epochs):
+    for t in range(epoch_start, num_epochs):
         print("Epoch", t)
         loss_this_epoch = 0.0
         ex_idxs = [i for i in range(0, len(example_inps))]
@@ -112,8 +131,8 @@ def train(examples: Tuple[torch.Tensor, torch.Tensor], checkpoint_dir: str) -> M
             loss_this_epoch += loss.item()
             iteration_cnt += 1
 
-            if iteration_cnt % 10000 == 0:
-                save_checkpoint(t, iteration_cnt, model, checkpoint_dir)
+            if iteration_cnt % 1 == 0:
+                save_checkpoint(t, iteration_cnt, model, optimizer, checkpoint_dir)
 
         print("Loss:", loss_this_epoch)
 
