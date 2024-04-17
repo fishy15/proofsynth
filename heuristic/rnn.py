@@ -62,8 +62,8 @@ def load_training_examples(
             t1, t2, t3, goal = map(convert, terms[:-1])
             cls = int(terms[-1])
 
-            input_tensor = torch.cat((t1, t2, t3, goal)).to(device)
-            output_tensor = torch.Tensor([cls]).long().to(device)
+            input_tensor = torch.cat((t1, t2, t3, goal))
+            output_tensor = torch.Tensor([cls]).long()
 
             example_inps.append(input_tensor)
             example_outs.append(output_tensor)
@@ -99,8 +99,8 @@ def train(examples: Tuple[torch.Tensor, torch.Tensor], checkpoint_dir: str) -> M
 
         iteration_cnt = 0
         for exs in batch(ex_idxs, batch_size):
-            inp = torch.stack([example_inps[i] for i in exs])
-            target = torch.stack([example_outs[i] for i in exs]).squeeze()
+            inp = torch.stack([example_inps[i] for i in exs]).to(device)
+            target = torch.stack([example_outs[i] for i in exs]).squeeze().to(device)
             output = model(inp)
 
             loss = loss_fcn(output, target)
