@@ -6,13 +6,7 @@ import torch.optim as optim
 
 from typing import Optional, Tuple
 
-from prop.tactics import (
-    bottom_up_tactics_single,
-    bottom_up_tactics_double,
-    all_tactics,
-    SingleTactic,
-    DoubleTactic,
-)
+from prop.tactics import all_tactics
 
 ALPHABET = "PQRST!&|>()_"
 BATCH_SIZE = 20

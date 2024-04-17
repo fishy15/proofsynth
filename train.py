@@ -1,7 +1,7 @@
 import torch
 
 from heuristic.rnn_generate import *
-from heuristic.rnn import *
+from heuristic.rnn_model import *
 
 
 def generate():
