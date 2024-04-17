@@ -24,7 +24,7 @@ def train_model():
     save_dir = input("which dir? ")
     examples = torch.load(f"{save_dir}/training.pt")
     model = train(examples, save_dir)
-    torch.save(model, f"{save_dir}/model.pt")
+    torch.save(model.state_dict(), f"{save_dir}/model.pt")
 
 
 def main():

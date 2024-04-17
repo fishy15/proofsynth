@@ -18,6 +18,11 @@ ALPHABET = "PQRST!&|>()_"
 BATCH_SIZE = 2
 TERM_SIZE = 64
 
+if torch.cuda.is_available():
+    device = "cuda"
+else:
+    device = "cpu"
+
 
 class MyRNN(nn.Module):
     emb: nn.Embedding
@@ -56,8 +61,8 @@ def load_training_examples(
             t1, t2, t3, goal = map(convert, terms[:-1])
             cls = int(terms[-1])
 
-            input_tensor = torch.cat((t1, t2, t3, goal))
-            output_tensor = torch.Tensor([cls]).long()
+            input_tensor = torch.cat((t1, t2, t3, goal)).to(device)
+            output_tensor = torch.Tensor([cls]).long().to(device)
 
             examples.append((input_tensor, output_tensor))
 
@@ -67,13 +72,14 @@ def load_training_examples(
 def save_checkpoint(epoch, iter, model, dir):
     file_name = f"{dir}/checkpoint_{epoch}_{iter}.pt"
     print("saving checkpoint at", file_name)
-    torch.save(model, file_name)
+    torch.save(model.state_dict(), file_name)
 
 
 def train(
     examples: list[Tuple[torch.Tensor, torch.Tensor]], checkpoint_dir: str
 ) -> MyRNN:
     model = MyRNN(TERM_SIZE * 4, 32, 32, 3)
+    model.to(device)
     model.zero_grad()
     model.train()
     optimizer = optim.Adam(model.parameters(), lr=1e-2)
@@ -105,7 +111,7 @@ def train(
             loss_this_epoch += loss.item()
             iteration_cnt += 1
 
-            if iteration_cnt % 1000 == 0:
+            if iteration_cnt % 10000 == 0:
                 save_checkpoint(t, iteration_cnt, model, checkpoint_dir)
 
         print("Loss:", loss_this_epoch)
