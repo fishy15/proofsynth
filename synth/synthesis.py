@@ -11,6 +11,7 @@ from synth.init_tactics import apply_all_init
 from synth.end_tactics import apply_all_end
 from heuristic.heuristic import Heuristic
 from heuristic.naive import Naive
+from heuristic.rnn import RNNHeuristic
 
 ITERATION_LIMIT = 10000
 SAMPLE_SIZE = 3
@@ -27,6 +28,11 @@ def construct_proof(goal: Expr, **kwargs: bool) -> Optional[Tactic]:
     else:
         remove_double_neg = False
 
+    if "rnn" in kwargs:
+        use_rnn = kwargs["rnn"]
+    else:
+        use_rnn = False
+
     if should_canonicalize:
         canonical_goal = canonicalize(goal)
         # print('canonicalization:', goal, "TO", canonical_goal)
@@ -37,7 +43,7 @@ def construct_proof(goal: Expr, **kwargs: bool) -> Optional[Tactic]:
         goal = goal_remove_negs
 
     state = ProofState([], goal)
-    return solve_proofstate(state, remove_double_neg=remove_double_neg)
+    return solve_proofstate(state, remove_double_neg=remove_double_neg, use_rnn=use_rnn)
 
 
 def solve_proofstate(
@@ -48,12 +54,23 @@ def solve_proofstate(
     else:
         remove_double_neg = False
 
+    if "use_rnn" in kwargs:
+        use_rnn = kwargs["use_rnn"]
+    else:
+        use_rnn = False
+
     state_after_inits = apply_all_init(state)
     state_after_both = apply_all_end(state_after_inits)
 
     if len(state_after_both) == 1 and state == state_after_both[0]:
         # we didn't make any progress
-        return find_tactics(state, Naive(), iterations_allowed, remove_double_neg)
+        heuristic: Heuristic
+        if use_rnn:
+            heuristic = RNNHeuristic()
+        else:
+            heuristic = Naive()
+
+        return find_tactics(state, heuristic, iterations_allowed, remove_double_neg)
     else:
         iterations_per_goal = iterations_allowed // len(state_after_both)
         proofs_per_goal = (

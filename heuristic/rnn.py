@@ -3,7 +3,7 @@ import numpy as np
 
 from typing import List
 
-from heuristic.rnn_model import MyRNN
+from heuristic.rnn_model import MyRNN, load_model
 from heuristic.heuristic import Heuristic
 from prop.lang import *
 from prop.tactics import (
@@ -21,11 +21,20 @@ assert bottom_up_tactics_double == all_tactics[NUM_SINGLE:]
 NUM_DOUBLE = len(bottom_up_tactics_double)
 
 
+class RNNLoadException(Exception):
+    pass
+
+
 class RNNHeuristic(Heuristic):
     rnn: MyRNN
 
-    def __init__(self, rnn: MyRNN):
-        self.rnn = rnn
+    def __init__(self):
+        try:
+            self.rnn = load_model("checkpoint.pt")
+        except:
+            raise RNNLoadException(
+                "checkpoint.pt missing from local dir, trying symlinking it?"
+            )
 
     def pick_tactic_single(self, hypotheses: List[Expr], goal: Expr) -> SingleTactic:
         assert len(hypotheses) == 3

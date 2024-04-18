@@ -5,6 +5,7 @@ model.pt
 checkpoints
 old_checkpoints
 copy-from-server.sh
+checkpoint.pt
 
 # Pulled from https://github.com/github/gitignore/blob/main/Python.gitignore
 # Byte-compiled / optimized / DLL files
