@@ -1,3 +1,5 @@
+import random
+
 import torch.nn.functional as F
 import numpy as np
 
@@ -25,12 +27,27 @@ class RNNLoadException(Exception):
     pass
 
 
+_rnn = load_model("checkpoint.pt")
+
+
+def get_random_idx(relative_probs: list[float]) -> int:
+    total_p = sum(relative_probs)
+    target = random.random() * total_p
+
+    prefix_sum = 0.0
+    for i, prob in enumerate(relative_probs):
+        prefix_sum += prob
+        if target <= prefix_sum:
+            return i
+    return len(relative_probs) - 1
+
+
 class RNNHeuristic(Heuristic):
     rnn: MyRNN
 
     def __init__(self):
         try:
-            self.rnn = load_model("checkpoint.pt")
+            self.rnn = _rnn
         except:
             raise RNNLoadException(
                 "checkpoint.pt missing from local dir, trying symlinking it?"
@@ -40,8 +57,8 @@ class RNNHeuristic(Heuristic):
         assert len(hypotheses) == 3
 
         output_values = self.rnn.evaluate(hypotheses, goal)[:NUM_SINGLE]
-        output_probs = F.softmax(output_values).tolist()
-        idx = np.random.choice(np.arange(NUM_SINGLE), p=output_probs)
+        output_probs = F.softmax(output_values, dim=0).tolist()
+        idx = get_random_idx(output_probs)
         return bottom_up_tactics_single[idx]
 
     def pick_tactic_double(self, hypotheses: List[Expr], goal: Expr) -> DoubleTactic:
@@ -49,5 +66,5 @@ class RNNHeuristic(Heuristic):
 
         output_values = self.rnn.evaluate(hypotheses, goal)[NUM_SINGLE:]
         output_probs = F.softmax(output_values).tolist()
-        idx = np.random.choice(np.arange(NUM_DOUBLE), p=output_probs)
+        idx = get_random_idx(output_probs)
         return bottom_up_tactics_double[idx]

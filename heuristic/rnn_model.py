@@ -50,7 +50,7 @@ class MyRNN(nn.Module):
 
     def evaluate(self, hypotheses: list[Expr], goal: Expr) -> torch.Tensor:
         input_str = create_input(hypotheses, goal)
-        input_tensor = torch.stack(list(map(convert, input_str.split(","))))
+        input_tensor = torch.cat(list(map(convert, input_str.split(","))))
         output_tensor = self.forward(input_tensor.unsqueeze(0)).squeeze()
         return output_tensor
 
@@ -58,7 +58,7 @@ class MyRNN(nn.Module):
 def load_model(checkpoint_file: Optional[str]) -> MyRNN:
     model = MyRNN(TERM_SIZE * 4, 32, 32, 3)
     if checkpoint_file is not None:
-        checkpoint = torch.load(checkpoint_file)
+        checkpoint = torch.load(checkpoint_file, map_location=device)
         model.load_state_dict(checkpoint["model"])
     model.eval()
     return model

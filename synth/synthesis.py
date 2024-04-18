@@ -17,22 +17,9 @@ ITERATION_LIMIT = 10000
 SAMPLE_SIZE = 3
 
 
-def construct_proof(goal: Expr, **kwargs: bool) -> Optional[Tactic]:
-    if "canonicalize" in kwargs:
-        should_canonicalize = kwargs["canonicalize"]
-    else:
-        should_canonicalize = False
-
-    if "remove_double_neg" in kwargs:
-        remove_double_neg = kwargs["remove_double_neg"]
-    else:
-        remove_double_neg = False
-
-    if "rnn" in kwargs:
-        use_rnn = kwargs["rnn"]
-    else:
-        use_rnn = False
-
+def construct_proof(
+    goal: Expr, should_canonicalize=False, remove_double_neg=False, use_rnn=False
+) -> Optional[Tactic]:
     if should_canonicalize:
         canonical_goal = canonicalize(goal)
         # print('canonicalization:', goal, "TO", canonical_goal)
@@ -47,18 +34,11 @@ def construct_proof(goal: Expr, **kwargs: bool) -> Optional[Tactic]:
 
 
 def solve_proofstate(
-    state: ProofState, iterations_allowed: int = ITERATION_LIMIT, **kwargs: bool
+    state: ProofState,
+    iterations_allowed: int = ITERATION_LIMIT,
+    remove_double_neg=False,
+    use_rnn=False,
 ) -> Optional[Tactic]:
-    if "remove_double_neg" in kwargs:
-        remove_double_neg = kwargs["remove_double_neg"]
-    else:
-        remove_double_neg = False
-
-    if "use_rnn" in kwargs:
-        use_rnn = kwargs["use_rnn"]
-    else:
-        use_rnn = False
-
     state_after_inits = apply_all_init(state)
     state_after_both = apply_all_end(state_after_inits)
 
@@ -74,7 +54,13 @@ def solve_proofstate(
     else:
         iterations_per_goal = iterations_allowed // len(state_after_both)
         proofs_per_goal = (
-            solve_proofstate(s, iterations_per_goal) for s in state_after_both
+            solve_proofstate(
+                s,
+                iterations_per_goal,
+                remove_double_neg=remove_double_neg,
+                use_rnn=use_rnn,
+            )
+            for s in state_after_both
         )
         for proof in proofs_per_goal:
             if proof is not None:
