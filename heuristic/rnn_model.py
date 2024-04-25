@@ -68,22 +68,15 @@ def load_model(small: bool = False, checkpoint_file: Optional[str] = None) -> My
     return model
 
 
-def load_training_examples(file_name: str) -> Tuple[torch.Tensor, torch.Tensor]:
-    example_inps = []
-    example_outs = []
-    with open(file_name, "r") as f:
-        for line in f:
-            terms = line.strip().split(",")
-            t1, t2, t3, goal = map(convert, terms[:-1])
-            cls = int(terms[-1])
+def load_training_example(line: str) -> Tuple[torch.Tensor, torch.Tensor]:
+    terms = line.strip().split(",")
+    t1, t2, t3, goal = map(convert, terms[:-1])
+    cls = int(terms[-1])
 
-            input_tensor = torch.cat((t1, t2, t3, goal))
-            output_tensor = torch.Tensor([cls]).long()
+    input_tensor = torch.cat((t1, t2, t3, goal))
+    output_tensor = torch.Tensor([cls]).long()
 
-            example_inps.append(input_tensor)
-            example_outs.append(output_tensor)
-
-    return torch.stack(example_inps), torch.stack(example_outs)
+    return (input_tensor, output_tensor)
 
 
 def save_checkpoint(epoch, iter, model, optimizer, dir):
@@ -100,12 +93,11 @@ def save_checkpoint(epoch, iter, model, optimizer, dir):
 
 
 def train(
-    examples: Tuple[torch.Tensor, torch.Tensor],
+    examples: list[str],
     checkpoint_dir: str,
     is_small: bool,
     load_from: Optional[str] = None,
 ) -> MyRNN:
-    example_inps, example_outs = examples
     model = load_model(is_small)
     model.to(device)
     model.zero_grad()
@@ -128,14 +120,17 @@ def train(
     for t in range(epoch_start, num_epochs):
         print("Epoch", t)
         loss_this_epoch = 0.0
-        ex_idxs = [i for i in range(0, len(example_inps))]
+        ex_idxs = [i for i in range(0, len(examples))]
         random.shuffle(ex_idxs)
         loss_fcn = nn.CrossEntropyLoss()
 
         iteration_cnt = 0
         for exs in batch(ex_idxs, batch_size):
-            inp = torch.stack([example_inps[i] for i in exs]).to(device)
-            target = torch.stack([example_outs[i] for i in exs]).squeeze().to(device)
+            convs = [load_training_example(examples[i]) for i in exs]
+            inps_list, outs_list = zip(*convs)
+
+            inp = torch.stack(inps_list).to(device)
+            target = torch.cat(outs_list).to(device)
             output = model(inp)
 
             loss = loss_fcn(output, target)

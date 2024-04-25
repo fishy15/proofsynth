@@ -14,14 +14,10 @@ def generate():
         generate_training_examples(exprs, proofs, limit=limit, file=f)
 
 
-def process_examples():
-    directory = input("which dir? ")
-    examples = load_training_examples(f"{directory}/training.txt")
-    torch.save(examples, f"{directory}/training.pt")
-
-
 def train_model():
     save_dir = input("which dir? ")
+    with open(f"{save_dir}/training.txt", "r") as f:
+        examples = f.readlines()
 
     is_small = input("is small? (y/n) ")
     small = is_small.lower() == "y"
@@ -33,21 +29,17 @@ def train_model():
     else:
         checkpoint_file = None
 
-    examples = torch.load(f"{save_dir}/training.pt")
     model = train(examples, save_dir, small, checkpoint_file)
     torch.save(model.state_dict(), f"{save_dir}/model.pt")
 
 
 def main():
     print("1 - generate")
-    print("2 - process examples")
-    print("3 - train model")
+    print("2 - train model")
 
     typ = int(input("input type: "))
     if typ == 1:
         generate()
-    elif typ == 2:
-        process_examples()
     else:
         train_model()
 
