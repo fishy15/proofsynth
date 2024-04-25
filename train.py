@@ -11,7 +11,7 @@ def generate():
     exprs = generate_init_exprs()
     proofs = generate_random_programs(exprs)
     with open(f"{directory}/training.txt", "w") as f:
-        generate_training_examples(proofs, limit=limit, file=f)
+        generate_training_examples(exprs, proofs, limit=limit, file=f)
 
 
 def process_examples():

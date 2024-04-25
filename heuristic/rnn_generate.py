@@ -4,32 +4,44 @@ import sys
 from prop.lang import *
 from prop.tactics import *
 
-MAX_DEPTH = 5
+MAX_DEPTH = 3
 SAMPLE_SIZE = 3
 
-EXPR_LIMIT = 10_000
+EXPR_LIMIT = 10_000_000
 PROOF_LIMIT = 100_000
 SAMPLE_LIMIT = 10_000_000
 
 
 def generate_init_exprs(limit: int = EXPR_LIMIT) -> list[Expr]:
-    current_exprs: list[Expr] = list(map(EVar, "PQRST"))
-    current_exprs_set = set(current_exprs)
+    current_exprs_small: list[Expr] = list(map(EVar, "PQRST"))
+    current_exprs_set = set(current_exprs_small)
+
+    in_set_already = 0
+    depth_too_big = 0
 
     for _ in range(limit):
         expr_cons = random.choice([ENeg, EImplies, EAnd, EOr])
         if expr_cons == ENeg:
-            old_expr: Expr = random.choice(current_exprs)
+            old_expr: Expr = random.choice(current_exprs_small)
             new_expr = expr_cons(old_expr)
         else:
-            old_expr1 = random.choice(current_exprs)
-            old_expr2 = random.choice(current_exprs)
+            old_expr1 = random.choice(current_exprs_small)
+            old_expr2 = random.choice(current_exprs_small)
             new_expr = expr_cons(old_expr1, old_expr2)
 
-        if new_expr not in current_exprs_set and new_expr.depth() <= MAX_DEPTH:
-            current_exprs.append(new_expr)
+        new_depth = new_expr.depth()
+        if new_expr not in current_exprs_set and new_depth <= MAX_DEPTH:
+            if new_depth < MAX_DEPTH:
+                current_exprs_small.append(new_expr)
             current_exprs_set.add(new_expr)
+        elif new_expr in current_exprs_set:
+            in_set_already += 1
+        else:
+            depth_too_big += 1
 
+    current_exprs = list(current_exprs_set)
+
+    print(len(current_exprs), in_set_already, depth_too_big)
     return current_exprs
 
 
@@ -39,7 +51,7 @@ def generate_random_programs(
     current_proofs: list[Tactic] = list(map(THypothesis, exprs))
     current_proofs_set = set(current_proofs)
 
-    for _ in range(limit):
+    while len(current_proofs) < limit:
         tactic: SingleTactic | DoubleTactic
         if random.random() < 0.5:
             # single program
@@ -60,6 +72,7 @@ def generate_random_programs(
         except EvalException:
             pass
 
+    print(len(current_proofs))
     return current_proofs
 
 
@@ -75,7 +88,10 @@ def create_input(samples: list[Expr], goal: Expr) -> str:
 
 
 def generate_training_examples(
-    proofs: list[Tactic], limit: int = SAMPLE_LIMIT, file=sys.stdout
+    all_hypotheses: list[Expr],
+    proofs: list[Tactic],
+    limit: int = SAMPLE_LIMIT,
+    file=sys.stdout,
 ) -> None:
     extraction_and_goals = [(p.extract_examples(), p.eval()) for p in proofs]
 
@@ -86,14 +102,18 @@ def generate_training_examples(
                 break
 
         hypotheses = list(proof_extract.keys())
-        samples = [random.choice(hypotheses) for _ in range(SAMPLE_SIZE)]
+        samples_set = set(random.choice(hypotheses) for _ in range(SAMPLE_SIZE))
 
         tactics_used: set[SingleTactic | DoubleTactic] = set()
-        for s in samples:
+        for s in samples_set:
             s1, s2 = proof_extract[s]
             tactics_used.update(s1)
             tactics_used.update(s2)
 
+        while len(samples_set) < SAMPLE_SIZE:
+            samples_set.add(random.choice(all_hypotheses))
+
+        samples = list(samples_set)
         random_tactic = random.choice(list(tactics_used))
 
         input_str = create_input(samples, goal)
