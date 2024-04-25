@@ -55,8 +55,12 @@ class MyRNN(nn.Module):
         return output_tensor
 
 
-def load_model(checkpoint_file: Optional[str]) -> MyRNN:
-    model = MyRNN(TERM_SIZE * 4, 32, 32, 3)
+def load_model(small: bool = False, checkpoint_file: Optional[str] = None) -> MyRNN:
+    if small:
+        model = MyRNN(TERM_SIZE * 4, 4, 4, 1)
+    else:
+        model = MyRNN(TERM_SIZE * 4, 32, 32, 3)
+
     if checkpoint_file is not None:
         checkpoint = torch.load(checkpoint_file, map_location=device)
         model.load_state_dict(checkpoint["model"])
@@ -98,10 +102,11 @@ def save_checkpoint(epoch, iter, model, optimizer, dir):
 def train(
     examples: Tuple[torch.Tensor, torch.Tensor],
     checkpoint_dir: str,
+    is_small: bool,
     load_from: Optional[str] = None,
 ) -> MyRNN:
     example_inps, example_outs = examples
-    model = MyRNN(TERM_SIZE * 4, 32, 32, 3)
+    model = load_model(is_small)
     model.to(device)
     model.zero_grad()
     model.train()

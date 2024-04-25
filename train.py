@@ -22,6 +22,10 @@ def process_examples():
 
 def train_model():
     save_dir = input("which dir? ")
+
+    is_small = input("is small? (y/n) ")
+    small = is_small.lower() == "y"
+
     should_load = input("load checkpoint? (y/n) ")
     if should_load.lower() == "y":
         checkpoint_file = input("checkpoint name? ")
@@ -30,7 +34,7 @@ def train_model():
         checkpoint_file = None
 
     examples = torch.load(f"{save_dir}/training.pt")
-    model = train(examples, save_dir, checkpoint_file)
+    model = train(examples, save_dir, small, checkpoint_file)
     torch.save(model.state_dict(), f"{save_dir}/model.pt")
 
 
