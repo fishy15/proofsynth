@@ -8,7 +8,7 @@ from transformers import (
     TrainingArguments,
 )
 
-BATCH_SIZE = 20
+BATCH_SIZE = 1
 tokenizer = RobertaTokenizerFast.from_pretrained("Salesforce/codet5-small")
 
 
