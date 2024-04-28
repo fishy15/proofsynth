@@ -34,7 +34,7 @@ def load_dataset(filepath: str) -> Dataset:
     return tokenized_dataset
 
 
-def finetune(examples: Dataset, base_model, directory: str):
+def finetune(examples: Dataset, base_model, directory: str, resume: bool):
     dataset = examples.train_test_split(test_size=0.1)
 
     training_args = TrainingArguments(
@@ -45,7 +45,7 @@ def finetune(examples: Dataset, base_model, directory: str):
         num_train_epochs=10,
         weight_decay=0.01,
         evaluation_strategy="steps",
-        eval_steps=1,
+        eval_steps=100_000,
         save_strategy="steps",
         save_steps=100_000,
         load_best_model_at_end=True,
@@ -60,7 +60,7 @@ def finetune(examples: Dataset, base_model, directory: str):
         tokenizer=tokenizer,
     )
 
-    trainer.train()
+    trainer.train(resume_from_checkpoint=resume)
     trainer.save_model()
 
 

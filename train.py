@@ -46,7 +46,11 @@ def finetune_model() -> None:
     transformer_checkpoints = f"{save_dir}/transformer_checkpoints"
     os.makedirs(transformer_checkpoints, exist_ok=True)
     dataset = load_dataset(f"{save_dir}/training.txt")
-    finetune(dataset, base_model, transformer_checkpoints)
+
+    resume_str = input("want to resume? (y/n) ")
+    resume = resume_str == "y"
+
+    finetune(dataset, base_model, transformer_checkpoints, resume)
 
 
 def main():
