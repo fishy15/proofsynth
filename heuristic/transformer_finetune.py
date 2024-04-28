@@ -23,7 +23,9 @@ def load_dataset(filepath: str) -> Dataset:
                 yield {"input": inp, "label": out}
 
     def prepare(exs):
-        tokenized_examples = tokenizer(exs["input"])
+        tokenized_examples = tokenizer(
+            exs["input"], truncation=True, max_length=512, padding="max_length"
+        )
         tokenized_examples["label"] = exs["label"]
         return tokenized_examples
 
