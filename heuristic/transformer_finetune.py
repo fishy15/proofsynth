@@ -36,7 +36,7 @@ def load_dataset(filepath: str) -> Dataset:
 
 
 def finetune(examples: Dataset, base_model, directory: str, resume: bool):
-    dataset = examples.train_test_split(test_size=0.1)
+    dataset = examples.train_test_split(test_size=0.0001)
 
     training_args = TrainingArguments(
         output_dir=directory,
@@ -46,9 +46,9 @@ def finetune(examples: Dataset, base_model, directory: str, resume: bool):
         num_train_epochs=10,
         weight_decay=0.01,
         evaluation_strategy="steps",
-        eval_steps=100_000,
+        eval_steps=900,
         save_strategy="steps",
-        save_steps=100_000,
+        save_steps=900,
         load_best_model_at_end=True,
         save_total_limit=3,
     )
