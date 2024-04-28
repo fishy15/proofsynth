@@ -2,7 +2,6 @@ import torch
 import torch.nn.functional as F
 
 from datasets import Dataset
-from prop.tactics import all_tactics
 from transformers import (
     RobertaTokenizerFast,
     Trainer,
