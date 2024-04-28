@@ -1,10 +1,13 @@
+import os
 import torch
 
 from heuristic.rnn_generate import *
 from heuristic.rnn_model import *
+from heuristic.transformer_finetune import *
+from transformers import T5ForSequenceClassification
 
 
-def generate():
+def generate() -> None:
     limit = int(input("how much? "))
     directory = input("which dir? ")
 
@@ -14,7 +17,7 @@ def generate():
         generate_training_examples(exprs, proofs, limit=limit, file=f)
 
 
-def train_model():
+def train_model() -> None:
     save_dir = input("which dir? ")
     with open(f"{save_dir}/training.txt", "r") as f:
         examples = f.readlines()
@@ -30,18 +33,34 @@ def train_model():
         checkpoint_file = None
 
     model = train(examples, save_dir, small, checkpoint_file)
+
     torch.save(model.state_dict(), f"{save_dir}/model.pt")
+
+
+def finetune_model() -> None:
+    base_model = T5ForSequenceClassification.from_pretrained(
+        "Salesforce/codet5-small", num_labels=len(all_tactics)
+    )
+
+    save_dir = input("which dir? ")
+    transformer_checkpoints = f"{save_dir}/transformer_checkpoints"
+    os.makedirs(transformer_checkpoints, exist_ok=True)
+    dataset = load_dataset(f"{save_dir}/training.txt")
+    finetune(dataset, base_model, transformer_checkpoints)
 
 
 def main():
     print("1 - generate")
-    print("2 - train model")
+    print("2 - train RNN")
+    print("3 - finetune transformer")
 
     typ = int(input("input type: "))
     if typ == 1:
         generate()
-    else:
+    elif typ == 2:
         train_model()
+    else:
+        finetune_model()
 
 
 if __name__ == "__main__":

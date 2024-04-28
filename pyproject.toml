@@ -11,6 +11,10 @@ python = "^3.12"
 lark = "^1.1.9"
 torch = "^2.2.2"
 numpy = "^1.26.4"
+transformers = "^4.40.1"
+sentencepiece = "^0.2.0"
+datasets = "^2.19.0"
+accelerate = "^0.29.3"
 
 
 [tool.poetry.group.dev.dependencies]
