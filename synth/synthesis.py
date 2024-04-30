@@ -12,13 +12,17 @@ from synth.end_tactics import apply_all_end
 from heuristic.heuristic import Heuristic
 from heuristic.naive import Naive
 from heuristic.rnn import RNNHeuristic
+from heuristic.transformer import CodeT5Heuristic
 
 ITERATION_LIMIT = 10000
 SAMPLE_SIZE = 3
 
 
 def construct_proof(
-    goal: Expr, should_canonicalize=False, remove_double_neg=False, use_rnn=False
+    goal: Expr,
+    should_canonicalize=False,
+    remove_double_neg=False,
+    heuristic: str = "naive",
 ) -> Optional[Tactic]:
     if should_canonicalize:
         canonical_goal = canonicalize(goal)
@@ -30,14 +34,16 @@ def construct_proof(
         goal = goal_remove_negs
 
     state = ProofState([], goal)
-    return solve_proofstate(state, remove_double_neg=remove_double_neg, use_rnn=use_rnn)
+    return solve_proofstate(
+        state, remove_double_neg=remove_double_neg, heuristic_type=heuristic
+    )
 
 
 def solve_proofstate(
     state: ProofState,
     iterations_allowed: int = ITERATION_LIMIT,
     remove_double_neg=False,
-    use_rnn=False,
+    heuristic_type: str = "naive",
 ) -> Optional[Tactic]:
     state_after_inits = apply_all_init(state)
     state_after_both = apply_all_end(state_after_inits)
@@ -45,10 +51,12 @@ def solve_proofstate(
     if len(state_after_both) == 1 and state == state_after_both[0]:
         # we didn't make any progress
         heuristic: Heuristic
-        if use_rnn:
+        if heuristic_type == "naive":
+            heuristic = Naive()
+        elif heuristic_type == "rnn":
             heuristic = RNNHeuristic()
         else:
-            heuristic = Naive()
+            heuristic = CodeT5Heuristic()
 
         return find_tactics(state, heuristic, iterations_allowed, remove_double_neg)
     else:
@@ -58,7 +66,7 @@ def solve_proofstate(
                 s,
                 iterations_per_goal,
                 remove_double_neg=remove_double_neg,
-                use_rnn=use_rnn,
+                heuristic_type=heuristic_type,
             )
             for s in state_after_both
         )
