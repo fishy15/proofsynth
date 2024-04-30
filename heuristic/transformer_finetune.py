@@ -1,15 +1,27 @@
+from typing import Optional
 import torch
 import torch.nn.functional as F
 
 from datasets import Dataset
 from transformers import (
     RobertaTokenizerFast,
+    T5ForSequenceClassification,
     Trainer,
     TrainingArguments,
 )
 
+from prop.lang import Expr
+from prop.tactics import all_tactics
+from heuristic.rnn_generate import create_input
+
 BATCH_SIZE = 1
 tokenizer = RobertaTokenizerFast.from_pretrained("Salesforce/codet5-small")
+
+
+def tokenize(ex, **kwargs):
+    return tokenizer(
+        ex, truncation=True, max_length=512, padding="max_length", **kwargs
+    )
 
 
 def load_dataset(filepath: str) -> Dataset:
@@ -23,9 +35,7 @@ def load_dataset(filepath: str) -> Dataset:
                 yield {"input": inp, "label": out}
 
     def prepare(exs):
-        tokenized_examples = tokenizer(
-            exs["input"], truncation=True, max_length=512, padding="max_length"
-        )
+        tokenized_examples = tokenize(exs["input"])
         tokenized_examples["label"] = exs["label"]
         return tokenized_examples
 
@@ -65,7 +75,32 @@ def finetune(examples: Dataset, base_model, directory: str, resume: bool):
     trainer.save_model()
 
 
-def evaluate(input_str: str, model) -> torch.Tensor:
+_finetuned_model: Optional[T5ForSequenceClassification] = None
+_base_model: Optional[T5ForSequenceClassification] = None
+
+
+def load_model(base: bool = False) -> T5ForSequenceClassification:
+    global _finetuned_model
+    global _base_model
+
+    if base:
+        if _base_model is None:
+            _base_model = T5ForSequenceClassification.from_pretrained(
+                "Salesforce/codet5-small", num_labels=len(all_tactics)
+            )
+        return _base_model
+    else:
+        if _finetuned_model is None:
+            _finetuned_model = T5ForSequenceClassification.from_pretrained(
+                "hf_checkpoint", num_labels=len(all_tactics)
+            )
+        return _finetuned_model
+
+
+def evaluate(
+    model: T5ForSequenceClassification, hypotheses: list[Expr], goal: Expr
+) -> torch.Tensor:
+    input_str = create_input(hypotheses, goal)
     inputs = tokenizer(input_str, return_tensors="pt")
     with torch.no_grad():
         logits = model(**inputs).logits.squeeze()
