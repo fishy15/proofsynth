@@ -30,4 +30,9 @@ def intro_ands(state: ProofState) -> ProofState:
 
 
 def apply_all_init(state: ProofState):
-    return intros(intro_ands(state))
+    cur_state = state
+    while True:
+        new_state = intros(intro_ands(cur_state))
+        if cur_state == new_state:
+            return cur_state
+        cur_state = new_state

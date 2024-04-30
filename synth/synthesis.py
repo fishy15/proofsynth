@@ -1,6 +1,6 @@
 import random
 
-from itertools import product
+from itertools import product, chain
 from typing import Optional
 
 from prop.canonicalize import canonicalize, remove_double_negation
@@ -75,15 +75,19 @@ class SynthesisTask:
         if len(state_after_both) == 1 and state == state_after_both[0]:
             return self.find_tactics(state, iterations_allowed)
         else:
-            iterations_per_goal = iterations_allowed // len(state_after_both)
-            proofs_per_goal = (
+            iterations_per_goal = iterations_allowed // (len(state_after_both) + 1)
+
+            solve_current = [self.find_tactics(state_after_inits, iterations_per_goal)]
+
+            solve_split_gen = (
                 self.solve_proofstate(
                     s,
                     iterations_per_goal,
                 )
                 for s in state_after_both
             )
-            for proof in proofs_per_goal:
+
+            for proof in chain(solve_current, solve_split_gen):
                 if proof is not None:
                     return proof
             return None
