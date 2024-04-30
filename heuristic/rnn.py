@@ -1,7 +1,6 @@
 import random
 
 import torch.nn.functional as F
-import numpy as np
 
 from typing import List
 
@@ -27,7 +26,8 @@ class RNNLoadException(Exception):
     pass
 
 
-_rnn = load_model("checkpoint.pt")
+_rnn = load_model(checkpoint_file="checkpoint.pt")
+_rnn_small = load_model(small=True, checkpoint_file="checkpoint_small.pt")
 
 
 def get_random_idx(relative_probs: list[float]) -> int:
@@ -45,13 +45,11 @@ def get_random_idx(relative_probs: list[float]) -> int:
 class RNNHeuristic(Heuristic):
     rnn: MyRNN
 
-    def __init__(self):
-        try:
+    def __init__(self, small: bool = False):
+        if small:
+            self.rnn = _rnn_small
+        else:
             self.rnn = _rnn
-        except:
-            raise RNNLoadException(
-                "checkpoint.pt missing from local dir, trying symlinking it?"
-            )
 
     def pick_tactic_single(self, hypotheses: List[Expr], goal: Expr) -> SingleTactic:
         assert len(hypotheses) == 3

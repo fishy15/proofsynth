@@ -55,6 +55,8 @@ def solve_proofstate(
             heuristic = Naive()
         elif heuristic_type == "rnn":
             heuristic = RNNHeuristic()
+        elif heuristic_type == "rnn-small":
+            heuristic = RNNHeuristic(small=True)
         else:
             heuristic = CodeT5Heuristic()
 

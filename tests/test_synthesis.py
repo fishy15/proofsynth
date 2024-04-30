@@ -22,6 +22,7 @@ tasks = [
 heuristic_types = [
     "naive",
     "rnn",
+    "rnn-small",
     "transformer",
 ]
 

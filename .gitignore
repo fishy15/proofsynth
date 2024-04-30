@@ -9,6 +9,8 @@ checkpoint.pt
 checkpoints_small
 hf_checkpoint
 transformer_checkpoints
+checkpoint_small.pt
+tmp
 
 # Pulled from https://github.com/github/gitignore/blob/main/Python.gitignore
 # Byte-compiled / optimized / DLL files
