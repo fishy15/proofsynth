@@ -29,6 +29,7 @@ heuristic_types = [
 
 @pytest.mark.parametrize("goal", tasks)
 @pytest.mark.parametrize("heuristic", heuristic_types)
+@pytest.mark.timeout(120)
 def test_synthesis(goal: str, heuristic: str) -> None:
     goal_expr = parse_prop(goal)
     task = SynthesisTask(goal_expr, heuristic=heuristic)
@@ -39,6 +40,7 @@ def test_synthesis(goal: str, heuristic: str) -> None:
 
 @pytest.mark.parametrize("goal", tasks)
 @pytest.mark.parametrize("heuristic", heuristic_types)
+@pytest.mark.timeout(120)
 def test_synthesis_remove_double_neg(goal: str, heuristic: str) -> None:
     goal_expr = parse_prop(goal)
     task = SynthesisTask(goal_expr, heuristic=heuristic, remove_double_neg=True)
@@ -49,6 +51,7 @@ def test_synthesis_remove_double_neg(goal: str, heuristic: str) -> None:
 
 @pytest.mark.parametrize("goal", tasks)
 @pytest.mark.parametrize("heuristic", heuristic_types)
+@pytest.mark.timeout(120)
 def test_synthesis_with_canonicalization(goal: str, heuristic: str) -> None:
     goal_expr = parse_prop(goal)
     task = SynthesisTask(goal_expr, heuristic=heuristic, should_canonicalize=True)
@@ -59,6 +62,7 @@ def test_synthesis_with_canonicalization(goal: str, heuristic: str) -> None:
 
 @pytest.mark.parametrize("goal", tasks)
 @pytest.mark.parametrize("heuristic", heuristic_types)
+@pytest.mark.timeout(120)
 def test_synthesis_with_canonicalization_and_neg_removal(
     goal: str, heuristic: str
 ) -> None:
