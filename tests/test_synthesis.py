@@ -32,7 +32,9 @@ heuristic_types = [
 def test_synthesis(goal: str, heuristic: str) -> None:
     goal_expr = parse_prop(goal)
     task = SynthesisTask(goal_expr, heuristic=heuristic)
-    assert task.construct_proof() is not None
+    proof = task.construct_proof()
+    print("\nIterations Used:", task.iterations_used)
+    assert proof is not None
 
 
 @pytest.mark.parametrize("goal", tasks)
@@ -40,7 +42,9 @@ def test_synthesis(goal: str, heuristic: str) -> None:
 def test_synthesis_remove_double_neg(goal: str, heuristic: str) -> None:
     goal_expr = parse_prop(goal)
     task = SynthesisTask(goal_expr, heuristic=heuristic, remove_double_neg=True)
-    assert task.construct_proof() is not None
+    proof = task.construct_proof()
+    print("\nIterations Used:", task.iterations_used)
+    assert proof is not None
 
 
 @pytest.mark.parametrize("goal", tasks)
@@ -48,7 +52,9 @@ def test_synthesis_remove_double_neg(goal: str, heuristic: str) -> None:
 def test_synthesis_with_canonicalization(goal: str, heuristic: str) -> None:
     goal_expr = parse_prop(goal)
     task = SynthesisTask(goal_expr, heuristic=heuristic, should_canonicalize=True)
-    assert task.construct_proof() is not None
+    proof = task.construct_proof()
+    print("\nIterations Used:", task.iterations_used)
+    assert proof is not None
 
 
 @pytest.mark.parametrize("goal", tasks)
@@ -60,4 +66,6 @@ def test_synthesis_with_canonicalization_and_neg_removal(
     task = SynthesisTask(
         goal_expr, heuristic=heuristic, should_canonicalize=True, remove_double_neg=True
     )
-    assert task.construct_proof() is not None
+    proof = task.construct_proof()
+    print("\nIterations Used:", task.iterations_used)
+    assert proof is not None

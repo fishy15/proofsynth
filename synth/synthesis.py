@@ -141,6 +141,7 @@ class SynthesisTask:
                 for hyp in sample_tactics:
                     insert_if_valid(single_tactic(hyp))
 
+            self.iterations_used += 1
             iterations += 1
 
         # if state.goal in current_proofs:
