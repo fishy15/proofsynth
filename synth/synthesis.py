@@ -5,10 +5,10 @@ from typing import Optional
 
 from prop.canonicalize import canonicalize, remove_double_negation
 from prop.lang import Expr
-from prop.tactics import Tactic, THypothesis, EvalException
+from prop.tactics import Tactic, THypothesis, TSubcases, EvalException
 from synth.proofstate import ProofState
 from synth.init_tactics import apply_all_init
-from synth.end_tactics import apply_all_end
+from synth.end_tactics import split_and, split_or
 from heuristic.heuristic import Heuristic
 from heuristic.naive import Naive
 from heuristic.rnn import RNNHeuristic
@@ -70,10 +70,21 @@ class SynthesisTask:
         iterations_allowed: int = ITERATION_LIMIT,
     ) -> Optional[Tactic]:
         state_after_inits = apply_all_init(state)
-        state_after_both = apply_all_end(state_after_inits)
+        state_after_both = split_or(state_after_inits)
 
         if len(state_after_both) == 1 and state == state_after_both[0]:
-            return self.find_tactics(state, iterations_allowed)
+            iters_half = iterations_allowed // 2
+            proof_all = self.find_tactics(state, iters_half)
+            if proof_all is None:
+                state_goal_ands_split = split_and(state)
+                iterations_per_goal = iters_half // len(state_goal_ands_split)
+                proofs = [
+                    self.find_tactics(s, iterations_per_goal)
+                    for s in state_goal_ands_split
+                ]
+                if all(p is not None for p in proofs):
+                    return TSubcases(proofs)  # type:ignore
+            return proof_all
         else:
             iterations_per_goal = iterations_allowed // (len(state_after_both) + 1)
 

@@ -618,6 +618,25 @@ class TOrToImplies(Tactic):
         return self._single_extract_examples(self.term)
 
 
+@dataclass(frozen=True, slots=True, eq=True)
+class TSubcases(Tactic):
+    terms: list[Tactic]
+
+    def eval(self) -> Expr:
+        term_expr = self.terms[0].eval()
+
+        for subproof in self.terms[1:]:
+            term_expr = EAnd(term_expr, subproof.eval())
+
+        return term_expr
+
+    def depth(self) -> int:
+        return max(t.depth() for t in self.terms) + 1
+
+    def extract_examples(self) -> dict[Expr, ProofSummary]:
+        return {}
+
+
 bottom_up_tactics_single: List[SingleTactic] = [
     TSimplification,
     TDeMorganAndNot,
