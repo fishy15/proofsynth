@@ -45,6 +45,7 @@ def test_synthesis(goal: str, heuristic: str) -> None:
     task = SynthesisTask(goal_expr, heuristic=heuristic)
     proof = task.construct_proof()
     print("\nIterations Used:", task.iterations_used)
+    print("# of new generated terms:", task.successful_iterations)
     assert proof is not None
 
 
@@ -56,6 +57,7 @@ def test_synthesis_remove_double_neg(goal: str, heuristic: str) -> None:
     task = SynthesisTask(goal_expr, heuristic=heuristic, remove_double_neg=True)
     proof = task.construct_proof()
     print("\nIterations Used:", task.iterations_used)
+    print("# of new generated terms:", task.successful_iterations)
     assert proof is not None
 
 
@@ -67,6 +69,7 @@ def test_synthesis_with_canonicalization(goal: str, heuristic: str) -> None:
     task = SynthesisTask(goal_expr, heuristic=heuristic, should_canonicalize=True)
     proof = task.construct_proof()
     print("\nIterations Used:", task.iterations_used)
+    print("# of new generated terms:", task.successful_iterations)
     assert proof is not None
 
 
@@ -82,4 +85,5 @@ def test_synthesis_with_canonicalization_and_neg_removal(
     )
     proof = task.construct_proof()
     print("\nIterations Used:", task.iterations_used)
+    print("# of new generated terms:", task.successful_iterations)
     assert proof is not None

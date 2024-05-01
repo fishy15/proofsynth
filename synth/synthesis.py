@@ -24,6 +24,7 @@ class SynthesisTask:
     should_canonicalize: bool
     remove_double_neg: bool
     iterations_used: int
+    successful_iterations: int
 
     def __init__(
         self,
@@ -46,6 +47,7 @@ class SynthesisTask:
         self.should_canonicalize = should_canonicalize
         self.remove_double_neg = remove_double_neg
         self.iterations_used = 0
+        self.successful_iterations = 0
 
     def construct_proof(
         self,
@@ -129,6 +131,7 @@ class SynthesisTask:
                 ):
                     current_proofs[expr] = proof
                     current_hypotheses.append(expr)
+                    self.successful_iterations += 1
             except EvalException:
                 # just means that it is invalid
                 pass
